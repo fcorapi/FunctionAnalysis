@@ -30,8 +30,8 @@ def DerivFunction(x):
     return val
 
 #Function to be integrated to determine Legendre coefficients
-def integrand(x,n):
-    value = Legendre(x,n)*DesiredFunction(x)
+def integrand(x,n, fn):
+    value = Legendre(x,n)*fn(x)
     return value
 
 #Empty list that will contain Legendre series coefficients
@@ -40,19 +40,19 @@ C_n = []
 #Integrate to determine Legendre series coefficients
 Nval = 60 #Number of coefficients
 for n in range(0, Nval):
-    integralValue = quad(integrand, -1.0, 1.0, args=(n,))
+    integralValue = quad(integrand, -1.0, 1.0, args=(n, DesiredFunction,))
     cval = ((2.0*n+1)/2.0)*integralValue[0]
     C_n.append(cval)
 
 #LegendreSeries
-def LegendreSeries(x, N):
+def LegendreSeries(x, N, coeff):
     series = 0
     if N > len(C_n):
         print "Error"
         return 0
     else:
         for loop in range(0, N):
-            series = series + C_n[loop]*Legendre(x, loop)
+            series = series + coeff[loop]*Legendre(x, loop)
     return series
 
 #Calculate the norm of a particular Legendre polynomial
@@ -72,7 +72,7 @@ def DerivMatrix(Nsize):
         i = i + 1
     return 2*D
 
-print np.matmul(DerivMatrix(10), DerivMatrix(10))
+#print np.matmul(DerivMatrix(10), DerivMatrix(10))
 
 #Create a list for the coefficients of the series representing the derivative of the function
 Cprime_n = np.matmul(DerivMatrix(len(C_n)), np.matmul(DerivMatrix(len(C_n)), C_n))
@@ -81,25 +81,27 @@ Cprime_n = np.matmul(DerivMatrix(len(C_n)), np.matmul(DerivMatrix(len(C_n)), C_n
 #print DerivMatrix(len(C_n))
 #print Cprime_n
 
+#MAY REMOVE
 #DerivLegendreSeries
-def DerivLegendreSeries(x, N):
-    series = 0
-    if N > len(C_n):
-        print "Error"
-        return 0
-    else:
-        for loop in range(0, N):
-            series = series + Cprime_n[loop]*Legendre(x, loop)
-    return series
+# def DerivLegendreSeries(x, N):
+#     series = 0
+#     if N > len(C_n):
+#         print "Error"
+#         return 0
+#     else:
+#         for loop in range(0, N):
+#             series = series + Cprime_n[loop]*Legendre(x, loop)
+#     return series
 
 #Function to integrate over to find error in the Legendre Series
-def L2ErrorFunction(x, N):
-    errVal = abs(LegendreSeries(x, N) - DesiredFunction(x))**2
+def L2ErrorFunction(x, N, coeff, fn):
+    errVal = abs(LegendreSeries(x, N, coeff) - fn(x))**2
     return errVal
 
-def DerivL2ErrorFunction(x, N):
-    errVal = abs(DerivLegendreSeries(x, N) - DerivFunction(x))**2
-    return errVal
+#MAY REMOVE
+# def DerivL2ErrorFunction(x, N):
+#     errVal = abs(DerivLegendreSeries(x, N) - DerivFunction(x))**2
+#     return errVal
 
 #Make empty list to contain the L2 error for each N-value, as well as a list of the N-values.
 errorList = []
@@ -109,10 +111,10 @@ coeffNum = np.linspace(0,Nval-1,Nval)
 #Loops over every N value up to a maximum, and calculates the L2 error, and plots the square of the error as a function
 #of x.
 for maxN in range(1, len(C_n)+1):
-    error = quad(L2ErrorFunction, -1.0, 1.0, args=(maxN,))
+    error = quad(L2ErrorFunction, -1.0, 1.0, args=(maxN, C_n, DesiredFunction, ))
     errorList.append(np.sqrt(error[0]))
 
-    derivError = quad(DerivL2ErrorFunction, -1.0, 1.0, args=(maxN,))
+    derivError = quad(L2ErrorFunction, -1.0, 1.0, args=(maxN, Cprime_n, DerivFunction, ))
     derivErrorList.append(np.sqrt(derivError[0]))
 
     #plt.plot(xvals, L2ErrorFunction(xvals, maxN), label = "N = " + str(maxN-1))
@@ -142,12 +144,12 @@ plt.grid()
 plt.title('Derivative L2 Error for Different N-Values')
 
 #Error and Series Solution
-error = quad(L2ErrorFunction, -1.0, 1.0, args=(len(C_n),))
+error = quad(L2ErrorFunction, -1.0, 1.0, args=(len(C_n), C_n, DesiredFunction, ))
 error = np.sqrt(error[0])
-derivError = quad(DerivL2ErrorFunction, -1.0, 1.0, args=(len(Cprime_n),))
+derivError = quad(L2ErrorFunction, -1.0, 1.0, args=(len(Cprime_n), Cprime_n, DerivFunction, ))
 derivError = np.sqrt(derivError[0])
-seriesResult = LegendreSeries(xvals, len(C_n))
-derivSeriesResult = DerivLegendreSeries(xvals, len(Cprime_n))
+seriesResult = LegendreSeries(xvals, len(C_n), C_n)
+derivSeriesResult = LegendreSeries(xvals, len(Cprime_n), Cprime_n)
 
 #Print Results
 print "Legendre Series Coefficients:", C_n
@@ -164,7 +166,6 @@ plt.legend()
 plt.xlabel('X-Values')
 plt.ylabel('Y-Values')
 plt.title('Representing Functions Using Legendre Polynomials')
-
 
 #Plot Deriv Results
 plt.figure()
