@@ -1,7 +1,8 @@
-#LegendrePolynomialDerivative
-#This script takes a given function and calculates its derivative using a Legendre polynomial recursion relation.
+#LegendrePolynomialDE
+#This script takes a given function and calculates its derivative using a Legendre polynomial recursion relation,
+#and will work to solve DEs using similar methods.
 #Frank Corapi (fcorapi@uwaterloo.ca)
-#Last Modified: 06/08/2018
+#Last Modified: 06/18/2018
 
 #Import Directories
 import numpy as np
