@@ -75,8 +75,19 @@ def DerivMatrix(Nsize):
 
 #print np.matmul(DerivMatrix(10), DerivMatrix(10))
 
+def calcDeriv(order, coeffs):
+    matSize = len(coeffs)
+    primes = coeffs
+    if order <= 0:
+        return primes
+    else:
+        for loop in range(1, order+1):
+            primes = np.matmul(DerivMatrix(matSize), primes)
+        return primes
+
+
 #Create a list for the coefficients of the series representing the derivative of the function
-Cprime_n = np.matmul(DerivMatrix(len(C_n)), np.matmul(DerivMatrix(len(C_n)), C_n))
+Cprime_n = calcDeriv(2, C_n)
 
 #print len(C_n)
 #print DerivMatrix(len(C_n))
