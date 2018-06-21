@@ -31,12 +31,12 @@ def DerivFunction(x):
 
 #Analytic result for the phi function
 def phi(x):
-    val = np.cos((21*np.pi/2.0)*x)
+    val = -20.0*(np.exp(-2.0*(x**2)) - np.exp(-2.0))
     return val
 
 #Mass Density Function Example (rho)
 def rho(x):
-    val = -1.0*((21*np.pi/2.0)**2)*np.cos((21*np.pi/2.0)*x)
+    val = 80.0*np.exp(-2.0*(x**2))*(1.0 - 4.0*(x**2))
     return val
 
 #Function to be integrated to determine Legendre coefficients
@@ -153,12 +153,12 @@ seriesResult = LegendreSeries(xvals, len(C_n), C_n)
 derivSeriesResult = LegendreSeries(xvals, len(Cprime_n), Cprime_n)
 
 #Print Results
-print "Legendre Series Coefficients:", C_n
+#print "Legendre Series Coefficients:", C_n
 print "Error:", error
-print "Derivative Legendre Series Coefficients", Cprime_n
+#print "Derivative Legendre Series Coefficients", Cprime_n
 print "Derivative Error:", derivError
 
-print "Phi Coefficients:", phi_n
+#print "Phi Coefficients:", phi_n
 print "Phi Error", phiError
 
 #Scatter plot the L2 error versus N

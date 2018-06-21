@@ -16,8 +16,8 @@
       <file leaf-file-name="LegendrePolynomialDE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/LegendrePolynomialDE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="200">
-              <caret line="35" selection-start-line="35" selection-end-line="35" />
+            <state relative-caret-position="204">
+              <caret line="153" lean-forward="true" selection-start-line="153" selection-end-line="153" />
               <folding>
                 <element signature="e#272#290#0" expanded="true" />
               </folding>
@@ -143,7 +143,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -215,8 +214,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/LegendrePolynomialDE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="200">
-          <caret line="35" selection-start-line="35" selection-end-line="35" />
+        <state relative-caret-position="204">
+          <caret line="153" lean-forward="true" selection-start-line="153" selection-end-line="153" />
           <folding>
             <element signature="e#272#290#0" expanded="true" />
           </folding>
