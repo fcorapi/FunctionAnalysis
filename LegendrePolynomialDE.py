@@ -140,7 +140,7 @@ def GL_Quad(integrand, lowerBound, upperBound, N, args):
 
 
 Nval = 60 #Number of coefficients
-intN = Nval + 25 #Number of terms in Gauss-Legendre integration
+intN = 120 #Number of terms in Gauss-Legendre integration
 xvals = np.linspace(-1.0, 1.0, 1000) #X-Values
 coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
 
