@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.special import legendre
 from scipy.integrate import quad
-
+from numpy.polynomial.legendre import legroots
 #***********************************FUNCTION DEFINITIONS*************************************
 
 #Define Legendre Function
@@ -31,12 +31,12 @@ def DerivFunction(x):
 
 #Analytic result for the phi function
 def phi(x):
-    val = -20.0*(np.exp(-2.0*(x**2)) - np.exp(-2.0))
+    val = np.cos((21*np.pi/2.0)*x)
     return val
 
 #Mass Density Function Example (rho)
 def rho(x):
-    val = 80.0*np.exp(-2.0*(x**2))*(1.0 - 4.0*(x**2))
+    val = -1.0*((21*np.pi/2.0)**2)*np.cos((21*np.pi/2.0)*x)
     return val
 
 #Function to be integrated to determine Legendre coefficients
@@ -44,12 +44,12 @@ def integrand(x,n, fn):
     value = Legendre(x,n)*fn(x)
     return value
 
-def findCoeff(Nval, fn):
+def findCoeff(Nval, fn, intTerms):
     coeffList = []
     # Integrate to determine Legendre series coefficients
     for n in range(0, Nval):
-        integralValue = quad(integrand, -1.0, 1.0, args=(n, fn,))
-        cval = ((2.0*n+1)/2.0)*integralValue[0]
+        integralValue = GL_Quad(integrand, -1.0, 1.0, intTerms, args=(n, fn,))
+        cval = ((2.0*n+1)/2.0)*integralValue
         coeffList.append(cval)
     return coeffList
 
@@ -111,44 +111,64 @@ def L2ErrorFunction(x, N, coeff, fn):
     return errVal
 
 #Loops over every N value up to a maximum, and calculates the L2 error.
-def calcErrorList(coeff, fn):
+def calcErrorList(coeff, fn, intTerms):
     errList = []
     for maxN in range(1, len(coeff) + 1):
-        error = quad(L2ErrorFunction, -1.0, 1.0, args=(maxN, coeff, fn,))
-        errList.append(np.sqrt(error[0]))
+        err = GL_Quad(L2ErrorFunction, -1.0, 1.0, intTerms, args=(maxN, coeff, fn,))
+        errList.append(np.sqrt(err))
     return errList
+
+def GL_Quad(integrand, lowerBound, upperBound, N, args):
+    #Weight Function
+    def weight(x):
+        w = (2.0*(1-(x**2)))/((N*(Legendre(x, N-1)-x*Legendre(x, N)))**2)
+        return w
+
+    #Create list of roots for P_N
+    rootIndex = np.zeros(N+1)
+    rootIndex[N] = 1
+    roots = legroots(rootIndex)
+
+    value = 0
+    for x_i in roots:
+        value = weight(x_i)*integrand(((upperBound-lowerBound)/2.0)*x_i + ((upperBound+lowerBound)/2.0), *args) + value
+
+    value = ((upperBound-lowerBound)/2.0)*value
+    return value
+
 #*******************************END OF FUNCTIONS*************************************
 
 
 Nval = 60 #Number of coefficients
+intN = 120 #Number of terms in Gauss-Legendre integration
 xvals = np.linspace(-1.0, 1.0, 1000) #X-Values
 coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
 
-C_n = findCoeff(Nval, DesiredFunction) #Coefficients of Desired Function
+C_n = findCoeff(Nval, DesiredFunction, intN) #Coefficients of Desired Function
 Cprime_n = calcDeriv(2, C_n) #Coefficients of the derivative of the function
 
 #List L2 error for each N-value.
-errorList = calcErrorList(C_n, DesiredFunction)
-derivErrorList = calcErrorList(Cprime_n, DerivFunction)
+errorList = calcErrorList(C_n, DesiredFunction, intN)
+derivErrorList = calcErrorList(Cprime_n, DerivFunction, intN)
 
 #***************Solving an ODE***************
 
-rho_n = findCoeff(Nval,rho)
+rho_n = findCoeff(Nval, rho, intN)
 phi_n = np.linalg.solve(LMatrix(Nval), rho_n)
-phiErrorList = calcErrorList(phi_n, phi)
+phiErrorList = calcErrorList(phi_n, phi, intN)
 
 #Error and Series Solution for Phi
-phiError = quad(L2ErrorFunction, -1.0, 1.0, args=(len(phi_n), phi_n, phi, ))
-phiError = np.sqrt(phiError[0])
+phiError = GL_Quad(L2ErrorFunction, -1.0, 1.0, Nval, args=(len(phi_n), phi_n, phi, ))
+phiError = np.sqrt(phiError)
 phiSeries = LegendreSeries(xvals, len(phi_n), phi_n)
 
 #***************************
 
 #Error and Series Solution
-error = quad(L2ErrorFunction, -1.0, 1.0, args=(len(C_n), C_n, DesiredFunction, ))
-error = np.sqrt(error[0])
-derivError = quad(L2ErrorFunction, -1.0, 1.0, args=(len(Cprime_n), Cprime_n, DerivFunction, ))
-derivError = np.sqrt(derivError[0])
+error = GL_Quad(L2ErrorFunction, -1.0, 1.0, intN, args=(len(C_n), C_n, DesiredFunction, ))
+error = np.sqrt(error)
+derivError = GL_Quad(L2ErrorFunction, -1.0, 1.0, intN, args=(len(Cprime_n), Cprime_n, DerivFunction, ))
+derivError = np.sqrt(derivError)
 seriesResult = LegendreSeries(xvals, len(C_n), C_n)
 derivSeriesResult = LegendreSeries(xvals, len(Cprime_n), Cprime_n)
 
