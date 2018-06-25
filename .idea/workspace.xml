@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="09d3bd09-5e88-4a8d-ae46-5a10a4ff2713" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/LegendrePolynomialDE.py" beforeDir="false" afterPath="$PROJECT_DIR$/LegendrePolynomialDE.py" afterDir="false" />
-    </list>
+    <list default="true" id="09d3bd09-5e88-4a8d-ae46-5a10a4ff2713" name="Default" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -13,11 +11,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="LegendrePolynomialDE.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="LegendrePolynomialDE.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/LegendrePolynomialDE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="201">
-              <caret line="129" column="31" lean-forward="true" selection-start-line="129" selection-start-column="31" selection-end-line="129" selection-end-column="31" />
+            <state relative-caret-position="85">
+              <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
               <folding>
                 <element signature="e#272#290#0" expanded="true" />
               </folding>
@@ -25,14 +23,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="GL_Quad.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/GL_Quad.py">
+      <file leaf-file-name="SphericalHarmonicsDE.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/SphericalHarmonicsDE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
-              <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
-              <folding>
-                <element signature="e#142#160#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="187">
+              <caret line="120" column="11" lean-forward="true" selection-start-line="120" selection-start-column="11" selection-end-line="120" selection-end-column="11" />
             </state>
           </provider>
         </entry>
@@ -55,10 +50,11 @@
         <option value="$PROJECT_DIR$/LegendrePolynomialDerivative.py" />
         <option value="$PROJECT_DIR$/GL_Quad.py" />
         <option value="$PROJECT_DIR$/LegendrePolynomialDE.py" />
+        <option value="$PROJECT_DIR$/SphericalHarmonicsDE.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="7">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="163" />
     <option name="width" value="1047" />
     <option name="height" value="735" />
@@ -269,11 +265,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/LegendrePolynomialDE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="201">
-          <caret line="129" column="31" lean-forward="true" selection-start-line="129" selection-start-column="31" selection-end-line="129" selection-end-column="31" />
+        <state relative-caret-position="85">
+          <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
           <folding>
             <element signature="e#272#290#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SphericalHarmonicsDE.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="120" column="11" lean-forward="true" selection-start-line="120" selection-start-column="11" selection-end-line="120" selection-end-column="11" />
         </state>
       </provider>
     </entry>
