@@ -7,7 +7,7 @@
 #Import Directories
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.special import legendre
+from scipy.special import legendre, sph_harm
 from scipy.integrate import quad
 from numpy.polynomial.legendre import legroots
 #***********************************FUNCTION DEFINITIONS*************************************
@@ -20,48 +20,57 @@ def Legendre(x,n):
 
 #Function that we want to represent as a Legendre Series
 #TO BE MODIFIED BY USER DEPENDING ON WHICH FUNCTION IS WANTED
-def DesiredFunction(x):
-    val = np.sin(20*x)
+def DesiredFunction(theta,phi):
+    val = np.sin(theta)*np.cos(phi)
     return val
 
 #Derivative of the desired function
+#NEEDS TO BE MODIFIED
 def DerivFunction(x):
     val = 20.0*(-20.0)*np.sin(20*x)
     return val
 
 #Analytic result for the phi function
+#NEEDS TO BE MODIFIED
 def phi(x):
     val = np.cos((21*np.pi/2.0)*x)
     return val
 
 #Mass Density Function Example (rho)
+#NEEDS TO BE MODIFIED
 def rho(x):
     val = -1.0*((21*np.pi/2.0)**2)*np.cos((21*np.pi/2.0)*x)
     return val
 
 #Function to be integrated to determine Legendre coefficients
-def integrand(x,n, fn):
-    value = Legendre(x,n)*fn(x)
+def integrand(z, phi, n, m, fn):
+    value = np.conj(sph_harm(m, n, phi, np.arccos(z)))*fn(np.arccos(z), phi)
     return value
 
 def findCoeff(Nval, fn, intTerms):
     coeffList = []
     # Integrate to determine Legendre series coefficients
     for n in range(0, Nval):
-        integralValue = GL_Quad(integrand, -1.0, 1.0, intTerms, args=(n, fn,))
-        cval = ((2.0*n+1)/2.0)*integralValue
-        coeffList.append(cval)
+        for m in range(-n, n+1):
+            integralValue = GL_Quad_2D(integrand, -1.0, 1.0, 0, 2*np.pi, intTerms, args=(n, m, fn,))
+            cval = integralValue
+            coeffList.append(cval)
     return coeffList
 
-#LegendreSeries
-def LegendreSeries(x, N, coeff):
+#SHSeries
+def SHSeries(theta, phi, N, coeff):
     series = 0
+    ntracker = 0
     if N > len(coeff):
         print "Error"
         return 0
     else:
-        for loop in range(0, N):
-            series = series + coeff[loop]*Legendre(x, loop)
+        for loopn in range(0, N):
+            mtracker = 0
+            for loopm in range(-N, N+1):
+                series = series + coeff[mtracker + ntracker]*sph_harm(loopm, loopn, phi, theta)
+                mtracker = mtracker + 1
+                ntracker = (2*N + 1) + ntracker
     return series
 
 #Calculate the norm of a particular Legendre polynomial
@@ -106,15 +115,15 @@ def calcDeriv(order, coeffs):
         return primes
 
 #Function to integrate over to find error in the Legendre Series
-def L2ErrorFunction(x, N, coeff, fn):
-    errVal = abs(LegendreSeries(x, N, coeff) - fn(x))**2
+def L2ErrorFunction(theta, phi, N, coeff, fn):
+    errVal = abs(SHSeries(theta, phi, N, coeff) - fn(theta, phi))**2
     return errVal
 
 #Loops over every N value up to a maximum, and calculates the L2 error.
-def calcErrorList(coeff, fn, intTerms):
+def calcErrorList(coeff, Nval, fn, intTerms):
     errList = []
-    for maxN in range(1, len(coeff) + 1):
-        err = GL_Quad(L2ErrorFunction, -1.0, 1.0, intTerms, args=(maxN, coeff, fn,))
+    for maxN in range(1, Nval + 1):
+        err = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, intTerms, args=(maxN, coeff, fn,))
         errList.append(np.sqrt(err))
     return errList
 
@@ -136,41 +145,75 @@ def GL_Quad(integrand, lowerBound, upperBound, N, args):
     value = ((upperBound-lowerBound)/2.0)*value
     return value
 
+def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, args):
+    #Weight Function
+    def weight(arg):
+        w = (2.0*(1-(arg**2)))/((N*(Legendre(arg, N-1)-arg*Legendre(arg, N)))**2)
+        return w
+
+    #Create list of roots for P_N
+    rootIndex = np.zeros(N+1)
+    rootIndex[N] = 1
+    roots = legroots(rootIndex)
+
+    #Equally spaced points for trapzeoidal integration method for phi
+    Npoints = 100
+    deltaPhi = (upPhi-lowPhi)/Npoints
+    phiVals = np.linspace(lowPhi, upPhi, Npoints+1)
+
+    value = 0
+    for z_i in roots:
+        phiValue = 0
+        for phi in phiVals:
+            if phi == lowPhi:
+                phiValue = (deltaPhi/2.0) * integrand(((upZ-lowZ)/2.0)*z_i + ((upZ+lowZ)/2.0), phi, *args) + phiValue
+            elif phi == upPhi:
+                phiValue = (deltaPhi / 2.0) * integrand(((upZ - lowZ) / 2.0) * z_i + ((upZ + lowZ) / 2.0), phi,
+                                                        *args) + phiValue
+            else:
+                phiValue = (deltaPhi / 2.0) * 2.0 * integrand(((upZ - lowZ) / 2.0) * z_i + ((upZ + lowZ) / 2.0), phi,
+                                                              *args) + phiValue
+        value = weight(z_i)*phiValue + value
+
+    value = ((upZ-lowZ)/2.0)*value
+    return value
+
 #*******************************END OF FUNCTIONS*************************************
 
 
 Nval = 60 #Number of coefficients
 intN = 80 #Number of terms in Gauss-Legendre integration
-xvals = np.linspace(-1.0, 1.0, 1000) #X-Values
+thetaVals = np.linspace(0, np.pi, 1000) #Theta-Values
+phiVals = np.linspace(0, 2*np.pi, 1000) #Phi-Values
 coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
 
 C_n = findCoeff(Nval, DesiredFunction, intN) #Coefficients of Desired Function
 Cprime_n = calcDeriv(2, C_n) #Coefficients of the derivative of the function
 
 #List L2 error for each N-value.
-errorList = calcErrorList(C_n, DesiredFunction, intN)
-derivErrorList = calcErrorList(Cprime_n, DerivFunction, intN)
+errorList = calcErrorList(C_n, Nval, DesiredFunction, intN)
+derivErrorList = calcErrorList(Cprime_n, Nval, DerivFunction, intN)
 
 #***************Solving an ODE***************
 
 rho_n = findCoeff(Nval, rho, intN)
 phi_n = np.linalg.solve(LMatrix(Nval), rho_n)
-phiErrorList = calcErrorList(phi_n, phi, intN)
+phiErrorList = calcErrorList(phi_n, Nval, phi, intN)
 
 #Error and Series Solution for Phi
-phiError = GL_Quad(L2ErrorFunction, -1.0, 1.0, Nval, args=(len(phi_n), phi_n, phi, ))
+phiError = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, Nval, args=(Nval, phi_n, phi, ))
 phiError = np.sqrt(phiError)
-phiSeries = LegendreSeries(xvals, len(phi_n), phi_n)
+phiSeries = SHSeries(thetaVals, phiVals, Nval, phi_n)
 
 #***************************
 
 #Error and Series Solution
-error = GL_Quad(L2ErrorFunction, -1.0, 1.0, intN, args=(len(C_n), C_n, DesiredFunction, ))
+error = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, intN, args=(len(C_n), C_n, DesiredFunction, ))
 error = np.sqrt(error)
-derivError = GL_Quad(L2ErrorFunction, -1.0, 1.0, intN, args=(len(Cprime_n), Cprime_n, DerivFunction, ))
+derivError = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, intN, args=(len(Cprime_n), Cprime_n, DerivFunction, ))
 derivError = np.sqrt(derivError)
-seriesResult = LegendreSeries(xvals, len(C_n), C_n)
-derivSeriesResult = LegendreSeries(xvals, len(Cprime_n), Cprime_n)
+seriesResult = SHSeries(thetaVals, phiVals, Nval, C_n)
+derivSeriesResult = SHSeries(thetaVals, phiVals, Nval, Cprime_n)
 
 #Print Results
 #print "Legendre Series Coefficients:", C_n
@@ -181,61 +224,61 @@ print "Derivative Error:", derivError
 #print "Phi Coefficients:", phi_n
 print "Phi Error", phiError
 
-#Scatter plot the L2 error versus N
-plt.figure()
-plt.scatter(coeffNum, np.log10(errorList))
-#plt.yscale('log')
-plt.xlabel('N-Value')
-plt.ylabel('Log_10 of L2 Error')
-plt.grid()
-plt.title('L2 Error for Different N-Values')
-
-#Scatter plot the derivative L2 error versus N
-plt.figure()
-plt.scatter(coeffNum, np.log10(derivErrorList))
-#plt.yscale('log')
-plt.xlabel('N-Value')
-plt.ylabel('Log_10 of Derivative L2 Error')
-plt.grid()
-plt.title('Derivative L2 Error for Different N-Values')
-
-#Scatter plot the phi L2 error versus N
-plt.figure()
-plt.scatter(coeffNum, np.log10(phiErrorList))
-#plt.yscale('log')
-plt.xlabel('N-Value')
-plt.ylabel('Log_10 of Phi L2 Error')
-plt.grid()
-plt.title('Phi L2 Error for Different N-Values')
-
-#Plot Results
-plt.figure()
-plt.plot(xvals, seriesResult, 'r', label='Legendre Series')
-plt.plot(xvals, DesiredFunction(xvals), 'b--', label='Desired Function')
-plt.grid()
-plt.legend()
-plt.xlabel('X-Values')
-plt.ylabel('Y-Values')
-plt.title('Representing Functions Using Legendre Polynomials')
-
-#Plot Deriv Results
-plt.figure()
-plt.plot(xvals, derivSeriesResult, 'r', label='Derivative Legendre Series')
-plt.plot(xvals, DerivFunction(xvals), 'b--', label='Derivative Function')
-plt.grid()
-plt.legend()
-plt.xlabel('X-Values')
-plt.ylabel('Y-Values')
-plt.title('Representing Derivatives of Functions Using Legendre Polynomials')
-
-#Plot Phi Results
-plt.figure()
-plt.plot(xvals, phiSeries, 'r', label='Phi Series')
-plt.plot(xvals, phi(xvals), 'b--', label='Analytic Phi')
-plt.grid()
-plt.legend()
-plt.xlabel('X-Values')
-plt.ylabel('Y-Values')
-plt.title('Determining Phi Using Legendre Polynomials')
-
-plt.show()
+# #Scatter plot the L2 error versus N
+# plt.figure()
+# plt.scatter(coeffNum, np.log10(errorList))
+# #plt.yscale('log')
+# plt.xlabel('N-Value')
+# plt.ylabel('Log_10 of L2 Error')
+# plt.grid()
+# plt.title('L2 Error for Different N-Values')
+#
+# #Scatter plot the derivative L2 error versus N
+# plt.figure()
+# plt.scatter(coeffNum, np.log10(derivErrorList))
+# #plt.yscale('log')
+# plt.xlabel('N-Value')
+# plt.ylabel('Log_10 of Derivative L2 Error')
+# plt.grid()
+# plt.title('Derivative L2 Error for Different N-Values')
+#
+# #Scatter plot the phi L2 error versus N
+# plt.figure()
+# plt.scatter(coeffNum, np.log10(phiErrorList))
+# #plt.yscale('log')
+# plt.xlabel('N-Value')
+# plt.ylabel('Log_10 of Phi L2 Error')
+# plt.grid()
+# plt.title('Phi L2 Error for Different N-Values')
+#
+# #Plot Results
+# plt.figure()
+# plt.plot(xvals, seriesResult, 'r', label='Legendre Series')
+# plt.plot(xvals, DesiredFunction(xvals), 'b--', label='Desired Function')
+# plt.grid()
+# plt.legend()
+# plt.xlabel('X-Values')
+# plt.ylabel('Y-Values')
+# plt.title('Representing Functions Using Legendre Polynomials')
+#
+# #Plot Deriv Results
+# plt.figure()
+# plt.plot(xvals, derivSeriesResult, 'r', label='Derivative Legendre Series')
+# plt.plot(xvals, DerivFunction(xvals), 'b--', label='Derivative Function')
+# plt.grid()
+# plt.legend()
+# plt.xlabel('X-Values')
+# plt.ylabel('Y-Values')
+# plt.title('Representing Derivatives of Functions Using Legendre Polynomials')
+#
+# #Plot Phi Results
+# plt.figure()
+# plt.plot(xvals, phiSeries, 'r', label='Phi Series')
+# plt.plot(xvals, phi(xvals), 'b--', label='Analytic Phi')
+# plt.grid()
+# plt.legend()
+# plt.xlabel('X-Values')
+# plt.ylabel('Y-Values')
+# plt.title('Determining Phi Using Legendre Polynomials')
+#
+# plt.show()
