@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="09d3bd09-5e88-4a8d-ae46-5a10a4ff2713" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/SphericalHarmonicsDE.py" beforeDir="false" afterPath="$PROJECT_DIR$/SphericalHarmonicsDE.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -16,8 +17,8 @@
       <file leaf-file-name="SphericalHarmonicsDE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SphericalHarmonicsDE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="208">
-              <caret line="162" lean-forward="true" selection-start-line="162" selection-end-line="162" />
+            <state relative-caret-position="340">
+              <caret line="23" column="18" selection-start-line="23" selection-start-column="18" selection-end-line="23" selection-end-column="18" />
               <folding>
                 <element signature="e#272#290#0" expanded="true" />
               </folding>
@@ -28,8 +29,8 @@
       <file leaf-file-name="GL_Quad_2D.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/GL_Quad_2D.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="731">
-              <caret line="49" lean-forward="true" selection-start-line="49" selection-end-line="49" />
+            <state relative-caret-position="153">
+              <caret line="15" column="14" lean-forward="true" selection-start-line="15" selection-start-column="14" selection-end-line="15" selection-end-column="14" />
               <folding>
                 <element signature="e#161#179#0" expanded="true" />
               </folding>
@@ -54,8 +55,8 @@
       <list>
         <option value="$PROJECT_DIR$/LegendrePolynomialDerivative.py" />
         <option value="$PROJECT_DIR$/GL_Quad.py" />
-        <option value="$PROJECT_DIR$/LegendrePolynomialDE.py" />
         <option value="$PROJECT_DIR$/GL_Quad_2D.py" />
+        <option value="$PROJECT_DIR$/LegendrePolynomialDE.py" />
         <option value="$PROJECT_DIR$/SphericalHarmonicsDE.py" />
       </list>
     </option>
@@ -101,7 +102,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.GL_Quad_2D">
+  <component name="RunManager" selected="Python.SphericalHarmonicsDE">
     <configuration name="GL_Quad" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="FunctionAnalysis" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -174,16 +175,36 @@
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
+    <configuration name="SphericalHarmonicsDE" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="FunctionAnalysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/SphericalHarmonicsDE.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
     <list>
       <item itemvalue="Python.LegendrePolynomialDerivative" />
       <item itemvalue="Python.LegendrePolynomialDE" />
       <item itemvalue="Python.GL_Quad" />
       <item itemvalue="Python.GL_Quad_2D" />
+      <item itemvalue="Python.SphericalHarmonicsDE" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.GL_Quad_2D" />
+        <item itemvalue="Python.SphericalHarmonicsDE" />
         <item itemvalue="Python.LegendrePolynomialDE" />
+        <item itemvalue="Python.GL_Quad_2D" />
         <item itemvalue="Python.GL_Quad" />
         <item itemvalue="Python.LegendrePolynomialDerivative" />
       </list>
@@ -289,30 +310,30 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/LegendrePolynomialDE.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
-          <folding>
-            <element signature="e#272#290#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/GL_Quad_2D.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="731">
-          <caret line="49" lean-forward="true" selection-start-line="49" selection-end-line="49" />
+        <state relative-caret-position="153">
+          <caret line="15" column="14" lean-forward="true" selection-start-line="15" selection-start-column="14" selection-end-line="15" selection-end-column="14" />
           <folding>
             <element signature="e#161#179#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/LegendrePolynomialDE.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="113">
+          <caret line="146" column="78" selection-start-line="146" selection-start-column="78" selection-end-line="146" selection-end-column="78" />
+          <folding>
+            <element signature="e#272#290#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/SphericalHarmonicsDE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="208">
-          <caret line="162" lean-forward="true" selection-start-line="162" selection-end-line="162" />
+        <state relative-caret-position="340">
+          <caret line="23" column="18" selection-start-line="23" selection-start-column="18" selection-end-line="23" selection-end-column="18" />
           <folding>
             <element signature="e#272#290#0" expanded="true" />
           </folding>

@@ -21,7 +21,7 @@ def Legendre(x,n):
 #Function that we want to represent as a Legendre Series
 #TO BE MODIFIED BY USER DEPENDING ON WHICH FUNCTION IS WANTED
 def DesiredFunction(theta,phi):
-    val = np.sin(theta)*np.cos(phi)
+    val = np.sin(3*theta)*np.cos(2*phi)
     return val
 
 #Derivative of the desired function
@@ -58,19 +58,20 @@ def findCoeff(Nval, fn, intTerms):
     return coeffList
 
 #SHSeries
-def SHSeries(theta, phi, N, coeff):
+def SHSeries(z, phi, N, coeff):
     series = 0
     ntracker = 0
+
     if N > len(coeff):
         print "Error"
         return 0
     else:
         for loopn in range(0, N):
             mtracker = 0
-            for loopm in range(-N, N+1):
-                series = series + coeff[mtracker + ntracker]*sph_harm(loopm, loopn, phi, theta)
+            for loopm in range(-loopn, loopn+1):
+                series = series + coeff[mtracker + ntracker]*sph_harm(loopm, loopn, phi, np.arccos(z))
                 mtracker = mtracker + 1
-                ntracker = (2*N + 1) + ntracker
+            ntracker = (2*loopn + 1) + ntracker
     return series
 
 #Calculate the norm of a particular Legendre polynomial
@@ -115,8 +116,8 @@ def calcDeriv(order, coeffs):
         return primes
 
 #Function to integrate over to find error in the Legendre Series
-def L2ErrorFunction(theta, phi, N, coeff, fn):
-    errVal = abs(SHSeries(theta, phi, N, coeff) - fn(theta, phi))**2
+def L2ErrorFunction(z, phi, N, coeff, fn):
+    errVal = abs(SHSeries(z, phi, N, coeff) - fn(np.arccos(z), phi))**2
     return errVal
 
 #Loops over every N value up to a maximum, and calculates the L2 error.
@@ -181,57 +182,60 @@ def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, args):
 #*******************************END OF FUNCTIONS*************************************
 
 
-Nval = 60 #Number of coefficients
-intN = 80 #Number of terms in Gauss-Legendre integration
+Nval = 40 #Number of coefficients
+intN = 2*Nval #Number of terms in Gauss-Legendre integration
 thetaVals = np.linspace(0, np.pi, 1000) #Theta-Values
 phiVals = np.linspace(0, 2*np.pi, 1000) #Phi-Values
 coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
 
 C_n = findCoeff(Nval, DesiredFunction, intN) #Coefficients of Desired Function
-Cprime_n = calcDeriv(2, C_n) #Coefficients of the derivative of the function
+print "Coefficients Found!"
+# Cprime_n = calcDeriv(2, C_n) #Coefficients of the derivative of the function
 
 #List L2 error for each N-value.
+print "Calculating Error List..."
 errorList = calcErrorList(C_n, Nval, DesiredFunction, intN)
-derivErrorList = calcErrorList(Cprime_n, Nval, DerivFunction, intN)
+# derivErrorList = calcErrorList(Cprime_n, Nval, DerivFunction, intN)
 
 #***************Solving an ODE***************
 
-rho_n = findCoeff(Nval, rho, intN)
-phi_n = np.linalg.solve(LMatrix(Nval), rho_n)
-phiErrorList = calcErrorList(phi_n, Nval, phi, intN)
-
-#Error and Series Solution for Phi
-phiError = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, Nval, args=(Nval, phi_n, phi, ))
-phiError = np.sqrt(phiError)
-phiSeries = SHSeries(thetaVals, phiVals, Nval, phi_n)
+# rho_n = findCoeff(Nval, rho, intN)
+# phi_n = np.linalg.solve(LMatrix(Nval), rho_n)
+# phiErrorList = calcErrorList(phi_n, Nval, phi, intN)
+#
+# #Error and Series Solution for Phi
+# phiError = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, intN, args=(Nval, phi_n, phi, ))
+# phiError = np.sqrt(phiError)
+# phiSeries = SHSeries(thetaVals, phiVals, Nval, phi_n)
 
 #***************************
 
 #Error and Series Solution
-error = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, intN, args=(len(C_n), C_n, DesiredFunction, ))
+error = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, intN, args=(Nval, C_n, DesiredFunction, ))
 error = np.sqrt(error)
-derivError = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, intN, args=(len(Cprime_n), Cprime_n, DerivFunction, ))
-derivError = np.sqrt(derivError)
-seriesResult = SHSeries(thetaVals, phiVals, Nval, C_n)
-derivSeriesResult = SHSeries(thetaVals, phiVals, Nval, Cprime_n)
+# derivError = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, intN, args=(len(Cprime_n), Cprime_n, DerivFunction, ))
+# derivError = np.sqrt(derivError)
+seriesResult = SHSeries(np.cos(thetaVals), phiVals, Nval, C_n)
+# derivSeriesResult = SHSeries(thetaVals, phiVals, Nval, Cprime_n)
 
 #Print Results
-#print "Legendre Series Coefficients:", C_n
+print "Spherical Harmonics Series Coefficients:", C_n
 print "Error:", error
-#print "Derivative Legendre Series Coefficients", Cprime_n
-print "Derivative Error:", derivError
+# print "Derivative Legendre Series Coefficients", Cprime_n
+# print "Derivative Error:", derivError
 
-#print "Phi Coefficients:", phi_n
-print "Phi Error", phiError
+# print "Phi Coefficients:", phi_n
+# print "Phi Error", phiError
 
 # #Scatter plot the L2 error versus N
-# plt.figure()
-# plt.scatter(coeffNum, np.log10(errorList))
-# #plt.yscale('log')
-# plt.xlabel('N-Value')
-# plt.ylabel('Log_10 of L2 Error')
-# plt.grid()
-# plt.title('L2 Error for Different N-Values')
+plt.figure()
+plt.scatter(coeffNum, np.log10(errorList))
+#plt.yscale('log')
+plt.xlabel('N-Value')
+plt.ylabel('Log_10 of L2 Error')
+plt.grid()
+plt.title('L2 Error for Different N-Values')
+plt.show()
 #
 # #Scatter plot the derivative L2 error versus N
 # plt.figure()
