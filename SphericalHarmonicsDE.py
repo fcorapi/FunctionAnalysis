@@ -21,7 +21,7 @@ def Legendre(x,n):
 #Function that we want to represent as a Legendre Series
 #TO BE MODIFIED BY USER DEPENDING ON WHICH FUNCTION IS WANTED
 def DesiredFunction(theta,phi):
-    val = np.sin(3*theta)*np.cos(2*phi)
+    val = 1 # np.sin(5*theta)*np.cos(2*phi)
     return val
 
 #Derivative of the desired function
@@ -126,6 +126,7 @@ def calcErrorList(coeff, Nval, fn, intTerms):
     for maxN in range(1, Nval + 1):
         err = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, intTerms, args=(maxN, coeff, fn,))
         errList.append(np.sqrt(err))
+        print "Error for N = ", maxN, " completed."
     return errList
 
 def GL_Quad(integrand, lowerBound, upperBound, N, args):
@@ -182,7 +183,7 @@ def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, args):
 #*******************************END OF FUNCTIONS*************************************
 
 
-Nval = 40 #Number of coefficients
+Nval = 20 #Number of coefficients
 intN = 2*Nval #Number of terms in Gauss-Legendre integration
 thetaVals = np.linspace(0, np.pi, 1000) #Theta-Values
 phiVals = np.linspace(0, 2*np.pi, 1000) #Phi-Values
