@@ -35,14 +35,7 @@ def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, args):
     for z_i in roots:
         phiValue = 0
         for phi in phiVals:
-            if phi == lowPhi:
-                phiValue = (deltaPhi/2.0) * integrand(((upZ-lowZ)/2.0)*z_i + ((upZ+lowZ)/2.0), phi, *args) + phiValue
-            elif phi == upPhi:
-                phiValue = (deltaPhi / 2.0) * integrand(((upZ - lowZ) / 2.0) * z_i + ((upZ + lowZ) / 2.0), phi,
-                                                        *args) + phiValue
-            else:
-                phiValue = (deltaPhi / 2.0) * 2.0 * integrand(((upZ - lowZ) / 2.0) * z_i + ((upZ + lowZ) / 2.0), phi,
-                                                              *args) + phiValue
+            phiValue = (deltaPhi) * integrand(((upZ-lowZ)/2.0)*z_i + ((upZ+lowZ)/2.0), phi, *args) + phiValue
         value = weight(z_i)*phiValue + value
 
     value = ((upZ-lowZ)/2.0)*value

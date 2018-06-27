@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 from scipy.special import legendre, sph_harm
 from scipy.integrate import quad
 from numpy.polynomial.legendre import legroots
+from pylab import imshow
+from mpl_toolkits import mplot3d
 #***********************************FUNCTION DEFINITIONS*************************************
 
 #Define Legendre Function
@@ -21,7 +23,7 @@ def Legendre(x,n):
 #Function that we want to represent as a Legendre Series
 #TO BE MODIFIED BY USER DEPENDING ON WHICH FUNCTION IS WANTED
 def DesiredFunction(theta,phi):
-    val = 1 # np.sin(5*theta)*np.cos(2*phi)
+    val = np.sin(10*theta)*np.cos(2*phi)
     return val
 
 #Derivative of the desired function
@@ -159,22 +161,15 @@ def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, args):
     roots = legroots(rootIndex)
 
     #Equally spaced points for trapzeoidal integration method for phi
-    Npoints = 100
+    Npoints = 30
     deltaPhi = (upPhi-lowPhi)/Npoints
-    phiVals = np.linspace(lowPhi, upPhi, Npoints+1)
+    phiVals = np.linspace(lowPhi, upPhi-deltaPhi, Npoints)
 
     value = 0
     for z_i in roots:
         phiValue = 0
         for phi in phiVals:
-            if phi == lowPhi:
-                phiValue = (deltaPhi/2.0) * integrand(((upZ-lowZ)/2.0)*z_i + ((upZ+lowZ)/2.0), phi, *args) + phiValue
-            elif phi == upPhi:
-                phiValue = (deltaPhi / 2.0) * integrand(((upZ - lowZ) / 2.0) * z_i + ((upZ + lowZ) / 2.0), phi,
-                                                        *args) + phiValue
-            else:
-                phiValue = (deltaPhi / 2.0) * 2.0 * integrand(((upZ - lowZ) / 2.0) * z_i + ((upZ + lowZ) / 2.0), phi,
-                                                              *args) + phiValue
+                phiValue = deltaPhi * integrand(((upZ - lowZ) / 2.0) * z_i + ((upZ + lowZ) / 2.0), phi, *args) + phiValue
         value = weight(z_i)*phiValue + value
 
     value = ((upZ-lowZ)/2.0)*value
@@ -187,6 +182,7 @@ Nval = 20 #Number of coefficients
 intN = 2*Nval #Number of terms in Gauss-Legendre integration
 thetaVals = np.linspace(0, np.pi, 1000) #Theta-Values
 phiVals = np.linspace(0, 2*np.pi, 1000) #Phi-Values
+theta_mesh, phi_mesh = np.meshgrid(thetaVals, phiVals) #Make a mesh grid
 coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
 
 C_n = findCoeff(Nval, DesiredFunction, intN) #Coefficients of Desired Function
@@ -216,9 +212,26 @@ error = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, intN, args=(Nval, C_n
 error = np.sqrt(error)
 # derivError = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, intN, args=(len(Cprime_n), Cprime_n, DerivFunction, ))
 # derivError = np.sqrt(derivError)
-seriesResult = SHSeries(np.cos(thetaVals), phiVals, Nval, C_n)
+
+seriesResult = SHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_n)
 # derivSeriesResult = SHSeries(thetaVals, phiVals, Nval, Cprime_n)
 
+
+ax = plt.axes(projection='3d')
+ax.plot_surface(theta_mesh, phi_mesh, np.real(seriesResult), cmap = 'viridis', edgecolor='none')
+ax.plot_surface(theta_mesh, phi_mesh, DesiredFunction(theta_mesh, phi_mesh), edgecolor='none')
+ax.set_title('Spherical Harmonics Series')
+ax.set_xlabel('Theta-Values')
+ax.set_ylabel('Phi-Values')
+plt.show(ax)
+
+plt.figure()
+plt.contourf(theta_mesh, phi_mesh, np.real(seriesResult)-DesiredFunction(theta_mesh, phi_mesh), 30, cmap='hot')
+plt.colorbar()
+plt.title('Error Plot')
+plt.xlabel('Theta-Values')
+plt.ylabel('Phi-Values')
+plt.show()
 #Print Results
 print "Spherical Harmonics Series Coefficients:", C_n
 print "Error:", error
