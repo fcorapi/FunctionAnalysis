@@ -115,11 +115,11 @@ def Laplace(Nsize):
         if m >= 2*n+1:
             m = 0
             n = n + 1
-        lap[loopn, loopn] = n*(n+1)
+        lap[loopn, loopn] = -n*(n+1)
         m = m + 1
     return lap
 
-#print Laplace(18)
+#print Laplace(14)
 
 def calcDeriv(order, coeffs):
     matSize = len(coeffs)
