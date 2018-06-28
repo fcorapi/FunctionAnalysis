@@ -23,7 +23,7 @@ def Legendre(x,n):
 #Function that we want to represent as a Legendre Series
 #TO BE MODIFIED BY USER DEPENDING ON WHICH FUNCTION IS WANTED
 def DesiredFunction(theta,phi):
-    val = np.sin(10*theta)*np.cos(2*phi)
+    val = np.sin(10*theta)*np.cos(phi)
     return val
 
 #Derivative of the desired function
@@ -107,6 +107,20 @@ def LMatrix(Nsize):
             L[Nsize-1, loop] = -1
     return L
 
+def Laplace(Nsize):
+    lap = np.zeros((Nsize, Nsize))
+    n = 0
+    m = 0
+    for loopn in range(0, Nsize):
+        if m >= 2*n+1:
+            m = 0
+            n = n + 1
+        lap[loopn, loopn] = n*(n+1)
+        m = m + 1
+    return lap
+
+#print Laplace(18)
+
 def calcDeriv(order, coeffs):
     matSize = len(coeffs)
     primes = coeffs
@@ -178,7 +192,7 @@ def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, args):
 #*******************************END OF FUNCTIONS*************************************
 
 
-Nval = 20 #Number of coefficients
+Nval = 25 #Number of coefficients
 intN = 2*Nval #Number of terms in Gauss-Legendre integration
 thetaVals = np.linspace(0, np.pi, 1000) #Theta-Values
 phiVals = np.linspace(0, 2*np.pi, 1000) #Phi-Values
