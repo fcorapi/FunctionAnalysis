@@ -1,8 +1,8 @@
-#LegendrePolynomialDE
-#This script takes a given function and calculates its derivative using a Legendre polynomial recursion relation,
-#and will work to solve DEs using similar methods.
+#SphericalHarmonicsDE
+#This script takes a given function and represents it as a series of Spherical Harmonics,
+#and will eventually work to solve DEs.
 #Frank Corapi (fcorapi@uwaterloo.ca)
-#Last Modified: 06/20/2018
+#Last Modified: 06/28/2018
 
 #Import Directories
 import numpy as np
