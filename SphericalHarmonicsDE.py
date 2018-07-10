@@ -36,12 +36,12 @@ def DerivFunction(x):
 
 #Analytic result for the phi function
 def phi(theta, phi):
-    val = sph_harm(0, 0, phi, theta) + sph_harm(3, 3, phi, theta) + sph_harm(1, 3, phi, theta) + sph_harm(17, 18, phi, theta)
+    val = sph_harm(0, 0, phi, theta) + sph_harm(6, 10, phi, theta) + sph_harm(8, 10, phi, theta) + sph_harm(0, 17, phi, theta)
     return np.real(val)
 
 #Mass Density Function Example (rho)
 def rho(theta, phi):
-    val = -3*(3+1)*(sph_harm(3, 3, phi, theta) + sph_harm(1, 3, phi, theta)) + -18*(18+1)*(sph_harm(17, 18, phi, theta))
+    val = -10*(10+1)*(sph_harm(6, 10, phi, theta) + sph_harm(8, 10, phi, theta)) + -17*(17+1)*(sph_harm(0, 17, phi, theta))
     return np.real(val)
 
 #Function to be integrated to determine Legendre coefficients
