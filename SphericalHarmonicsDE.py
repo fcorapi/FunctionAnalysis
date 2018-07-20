@@ -36,12 +36,18 @@ def DerivFunction(x):
 
 #Analytic result for the phi function
 def phi(theta, phi):
-    val = sph_harm(0, 0, phi, theta) + sph_harm(6, 10, phi, theta) + sph_harm(8, 10, phi, theta) + sph_harm(0, 17, phi, theta)
+    val = 0
+    for l in range(0, 25):
+        for m in np.arange(-l, l, 2):
+            val = sph_harm(m, l, phi, theta) + val
     return np.real(val)
 
 #Mass Density Function Example (rho)
 def rho(theta, phi):
-    val = -10*(10+1)*(sph_harm(6, 10, phi, theta) + sph_harm(8, 10, phi, theta)) + -17*(17+1)*(sph_harm(0, 17, phi, theta))
+    val = 0
+    for l in range(1, 25):
+        for m in np.arange(-l, l, 2):
+            val = -l*(l+1)*sph_harm(m, l, phi, theta) + val
     return np.real(val)
 
 #Function to be integrated to determine Legendre coefficients
@@ -199,12 +205,16 @@ def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, args):
 
 #*******************************END OF FUNCTIONS*************************************
 
-Nval = 20 #Number of coefficients
-intN = 2*Nval #Number of terms in Gauss-Legendre integration
+Nval = 25 #Number of coefficients
+intN = 3*Nval #Number of terms in Gauss-Legendre integration
 thetaVals = np.linspace(0, np.pi, 100) #Theta-Values
 phiVals = np.linspace(0, 2*np.pi, 100) #Phi-Values
 theta_mesh, phi_mesh = np.meshgrid(thetaVals, phiVals) #Make a mesh grid
 coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
+
+# w,v = np.linalg.eig(LaplaceMatrix(17))
+# print w
+# print v
 
 #***********Representing Desired Function*****************
 # t = time.time()
@@ -291,7 +301,7 @@ coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
 t = time.time()
 print "Finding coefficients..."
 rho_n = findCoeff(Nval, rho, intN)
-rho_0 = findCoeff(1, phi, 5)[0]
+rho_0 = findCoeff(1, phi, intN)[0]
 rho_n_solver = rho_n[:]
 rho_n_solver[0] = rho_0
 print "Coefficients Found!"
@@ -320,7 +330,7 @@ print "Series determined, plotting results..."
 
 print "Phi Coefficients:", np.real(phi_n)
 print "Checking Values of Coeffecients:", checkCoeff
-print "Phi Error", phiError
+print "Phi Error:", phiError
 
 elapsedTime = time.time() - t
 print "Elapsed Time (s):", elapsedTime
