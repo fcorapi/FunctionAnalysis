@@ -22,11 +22,12 @@ def Legendre(x,n):
     P_n = leg(x)
     return P_n
 
+#*****************************SCALAR SPHERICAL HARMONICS************************************
 #Function that we want to represent as a Legendre Series
 #TO BE MODIFIED BY USER DEPENDING ON WHICH FUNCTION IS WANTED
 def DesiredFunction(theta,phi):
-    val = 1/(2*np.sqrt(np.pi)) + 1/(2*np.sqrt(2*np.pi/3))*np.sin(theta)*np.cos(phi) + 1/(2*np.sqrt(np.pi/3))*np.cos(theta) + 1/(8*np.sqrt(np.pi/35))*(np.sin(theta)**3)*np.cos(3*phi)
-    return val
+    val = sph_harm(0, 3, phi, theta)
+    return np.real(val)
 
 #Derivative of the desired function
 #NEEDS TO BE MODIFIED
@@ -78,6 +79,23 @@ def SHSeries(z, phi, N, coeff):
             mtracker = 0
             for loopm in range(-loopn, loopn+1):
                 series = series + coeff[mtracker + ntracker]*sph_harm(loopm, loopn, phi, np.arccos(z))
+                mtracker = mtracker + 1
+            ntracker = (2*loopn + 1) + ntracker
+    return series
+
+#SHSeries
+def SHSeriesAng(theta, phi, N, coeff):
+    series = 0
+    ntracker = 0
+
+    if N > len(coeff):
+        print "Error"
+        return 0
+    else:
+        for loopn in range(0, N):
+            mtracker = 0
+            for loopm in range(-loopn, loopn+1):
+                series = series + coeff[mtracker + ntracker]*sph_harm(loopm, loopn, phi, theta)
                 mtracker = mtracker + 1
             ntracker = (2*loopn + 1) + ntracker
     return series
@@ -203,15 +221,90 @@ def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, args):
     value = ((upZ-lowZ)/2.0)*value
     return value
 
+#*********************************************VECTOR SPHERICAL HARMONICS*************************************
+#Partial Phi derivative of a spherical harmonic
+def phiDerivSH(M, N, phi, theta):
+    eps = 1e-6
+    deriv = (sph_harm(M, N, phi + 0.5*eps, theta) - sph_harm(M, N, phi - 0.5*eps, theta))/eps
+    return deriv
+
+#Partial Theta derivative of a spherical harmonic
+def thetaDerivSH(M, N, phi, theta):
+    eps = 1e-6
+    deriv = (sph_harm(M, N, phi, theta + 0.5*eps) - sph_harm(M, N, phi, theta - 0.5*eps))/eps
+    return deriv
+
+def VecDesiredFunction(theta,phi,kind):
+    if kind == 'polar':
+        val = [thetaDerivSH(0, 4, phi, theta), phiDerivSH(0, 4, phi, theta)]
+    elif kind == 'axial':
+        val = [phiDerivSH(0, 4, phi, theta)/np.sin(theta), -np.sin(theta)*thetaDerivSH(0, 4, phi, theta)]
+    return val
+
+def vectorSH(M, N, phi, theta, kind):
+    if kind == 'polar':
+        vec = [thetaDerivSH(M, N, phi, theta), phiDerivSH(M, N, phi, theta)]
+    elif kind == 'axial':
+        vec = [phiDerivSH(M, N, phi, theta)/np.sin(theta), -np.sin(theta)*thetaDerivSH(M, N, phi, theta)]
+    return vec
+
+def vecIntegrand(z, phi, n, m ,fn, kind):
+    value = np.dot(np.conj(vectorSH(m, n, phi, np.arccos(z), kind)), fn(np.arccos(z), phi, kind))
+    return value
+
+def findVecCoeff(Nval, fn, intTerms, kind):
+    coeffList = []
+    # Integrate to determine Legendre series coefficients
+    for n in range(0, Nval):
+        for m in range(-n, n+1):
+            integralValue = GL_Quad_2D(vecIntegrand, -1.0, 1.0, 0, 2*np.pi, intTerms, args=(n, m, fn, kind,))
+            if n == 0:
+                cval = integralValue
+            else:
+                cval = integralValue / (n * (n + 1))
+            coeffList.append(cval)
+    return coeffList
+
+#VecSHSeries
+def VecSHSeries(z, phi, N, coeff, kind):
+    series = np.zeros(np.shape(vectorSH(0,0,phi,np.arccos(z), kind)))
+    ntracker = 0
+
+    if N > len(coeff):
+        print "Error"
+        return 0
+    else:
+        for loopn in range(0, N):
+            mtracker = 0
+            for loopm in range(-loopn, loopn+1):
+                series = series + np.multiply((coeff[mtracker + ntracker]), vectorSH(loopm, loopn, phi, np.arccos(z), kind))
+                mtracker = mtracker + 1
+            ntracker = (2*loopn + 1) + ntracker
+    return series
+
+#Function to integrate over to find error in the Legendre Series
+def L2VecErrorFunction(z, phi, N, coeff, fn, kind):
+    errVal = abs(np.dot(np.conj(VecSHSeries(z, phi, N, coeff, kind) - fn(np.arccos(z), phi, kind)), VecSHSeries(z, phi, N, coeff, kind) - fn(np.arccos(z), phi, kind)))
+    return errVal
+
+#Loops over every N value up to a maximum, and calculates the L2 error.
+def calcVecErrorList(coeff, Nval, fn, intTerms, kind):
+    errList = []
+    for maxN in range(1, Nval + 1):
+        err = GL_Quad_2D(L2VecErrorFunction, -1.0, 1.0, 0, 2*np.pi, intTerms, args=(maxN, coeff, fn, kind,))
+        errList.append(np.sqrt(err))
+        print "Error for N = ", maxN, " completed."
+    return errList
+
 #*******************************END OF FUNCTIONS*************************************
 
-Nval = 25 #Number of coefficients
+Nval = 5 #Number of coefficients
 intN = 3*Nval #Number of terms in Gauss-Legendre integration
-thetaVals = np.linspace(0, np.pi, 100) #Theta-Values
-phiVals = np.linspace(0, 2*np.pi, 100) #Phi-Values
+thetaVals = np.linspace(0, np.pi, 100) + 1e-5#Theta-Values
+phiVals = np.linspace(0, 2*np.pi, 100) + 1e-5 #Phi-Values
 theta_mesh, phi_mesh = np.meshgrid(thetaVals, phiVals) #Make a mesh grid
 coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
-
+vecKind = 'polar' #The Kind has to be 'polar' or 'axial'
 # w,v = np.linalg.eig(LaplaceMatrix(17))
 # print w
 # print v
@@ -253,8 +346,8 @@ coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
 #
 # elapsedTime = time.time() - t
 # print "Elapsed Time (s):", elapsedTime
-
-#Plotting Results
+#
+# #Plotting Results
 # ax = plt.axes(projection='3d')
 # ax.plot_surface(theta_mesh, phi_mesh, np.real(seriesResult), cmap = 'viridis', edgecolor='none')
 # ax.plot_surface(theta_mesh, phi_mesh, DesiredFunction(theta_mesh, phi_mesh), edgecolor='none')
@@ -270,22 +363,22 @@ coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
 # plt.xlabel('Theta-Values')
 # plt.ylabel('Phi-Values')
 # plt.show()
-
-# plt.figure()
-# plt.contourf(theta_mesh, phi_mesh, np.imag(seriesResult), 30, cmap='hot')
-# plt.colorbar()
-# plt.title('Imaginary Values Plot')
-# plt.xlabel('Theta-Values')
-# plt.ylabel('Phi-Values')
 #
-# plt.figure()
-# plt.contourf(theta_mesh, phi_mesh, np.real(seriesResult), 30, cmap='hot')
-# plt.colorbar()
-# plt.title('Real Values Plot')
-# plt.xlabel('Theta-Values')
-# plt.ylabel('Phi-Values')
-
-#Scatter plot the L2 error versus N
+# # plt.figure()
+# # plt.contourf(theta_mesh, phi_mesh, np.imag(seriesResult), 30, cmap='hot')
+# # plt.colorbar()
+# # plt.title('Imaginary Values Plot')
+# # plt.xlabel('Theta-Values')
+# # plt.ylabel('Phi-Values')
+# #
+# # plt.figure()
+# # plt.contourf(theta_mesh, phi_mesh, np.real(seriesResult), 30, cmap='hot')
+# # plt.colorbar()
+# # plt.title('Real Values Plot')
+# # plt.xlabel('Theta-Values')
+# # plt.ylabel('Phi-Values')
+#
+# #Scatter plot the L2 error versus N
 # plt.figure()
 # plt.scatter(coeffNum, np.log10(errorList))
 # #plt.yscale('log')
@@ -297,84 +390,140 @@ coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
 
 #*****************************************************************************************
 
-#***************Solving Laplace Equation***************
+#***********Representing Desired Vector Function*****************
 t = time.time()
+#print sph_harm(0,0,0,0)
 print "Finding coefficients..."
-rho_n = findCoeff(Nval, rho, intN)
-rho_0 = findCoeff(1, phi, intN)[0]
-rho_n_solver = rho_n[:]
-rho_n_solver[0] = rho_0
+C_n = findVecCoeff(Nval, VecDesiredFunction, intN, vecKind) #Coefficients of Desired Function
 print "Coefficients Found!"
-
-print "Solving Laplace equation..."
-phi_n = np.linalg.solve(LaplaceMatrix(len(rho_n_solver)), rho_n_solver)
-print "Solved, calculating error list..."
+# Cprime_n = calcDeriv(2, C_n) #Coefficients of the derivative of the function
 
 checkCoeff = []
-for check in range(len(phi_n)):
-    if abs(phi_n[check]) > 1e-6:
+for check in range(len(C_n)):
+    if abs(C_n[check]) > 1e-6:
         checkCoeff.append(1)
     else:
         checkCoeff.append(0)
 
 #List L2 error for each N-value.
-phiErrorList = calcErrorList(phi_n, Nval, phi, intN)
-phiError = phiErrorList[len(phiErrorList)-1]
+print "Calculating Error List..."
+errorList = calcVecErrorList(C_n, Nval, VecDesiredFunction, intN, vecKind)
+# derivErrorList = calcErrorList(Cprime_n, Nval, DerivFunction, intN)
+error = errorList[len(errorList)-1]
+# derivError = derivErrorList[len(derivErrorList)-1]
 print "Errors Calculated!"
 
-#Series Solution for Phi
 print "Determining Series..."
-phiSeries = SHSeries(np.cos(theta_mesh), phi_mesh, Nval, phi_n)
+seriesResult = VecSHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_n, vecKind)
 print "Series determined, plotting results..."
-
-
-print "Phi Coefficients:", np.real(phi_n)
+# derivSeriesResult = SHSeries(thetaVals, phiVals, Nval, Cprime_n)
+print np.shape(seriesResult)
+#Print Results
+print "Spherical Harmonics Series Coefficients:", np.real(C_n)
 print "Checking Values of Coeffecients:", checkCoeff
-print "Phi Error:", phiError
+print "Error:", error
+# print "Derivative Legendre Series Coefficients", Cprime_n
+# print "Derivative Error:", derivError
 
 elapsedTime = time.time() - t
 print "Elapsed Time (s):", elapsedTime
 
-#Plotting Results
-ax = plt.axes(projection='3d')
-ax.plot_surface(theta_mesh, phi_mesh, np.real(phiSeries), cmap = 'viridis', edgecolor='none')
-ax.plot_surface(theta_mesh, phi_mesh, phi(theta_mesh, phi_mesh), edgecolor='none')
-ax.set_title('Spherical Harmonics Series for Phi-Function')
-ax.set_xlabel('Theta-Values')
-ax.set_ylabel('Phi-Values')
-plt.show(ax)
-
+#Scatter plot the L2 error versus N
 plt.figure()
-plt.contourf(theta_mesh, phi_mesh, np.real(phiSeries)-phi(theta_mesh, phi_mesh), 30, cmap='hot')
-plt.colorbar()
-plt.title('Error Plot')
-plt.xlabel('Theta-Values')
-plt.ylabel('Phi-Values')
-plt.show()
-
-# plt.figure()
-# plt.contourf(theta_mesh, phi_mesh, np.imag(phiSeries), 30, cmap='hot')
-# plt.colorbar()
-# plt.title('Imaginary Values Plot')
-# plt.xlabel('Theta-Values')
-# plt.ylabel('Phi-Values')
-#
-# plt.figure()
-# plt.contourf(theta_mesh, phi_mesh, np.real(phiSeries), 30, cmap='hot')
-# plt.colorbar()
-# plt.title('Real Values Plot')
-# plt.xlabel('Theta-Values')
-# plt.ylabel('Phi-Values')
-
-#Scatter plot the phi L2 error versus N
-plt.figure()
-plt.scatter(coeffNum, np.log10(phiErrorList))
+plt.scatter(coeffNum, np.log10(errorList))
 #plt.yscale('log')
 plt.xlabel('N-Value')
-plt.ylabel('Log_10 of Phi L2 Error')
+plt.ylabel('Log_10 of L2 Error')
 plt.grid()
-plt.title('Phi L2 Error for Different N-Values')
+plt.title('L2 Error for Different N-Values')
 plt.show()
+
+plt.figure()
+plt.quiver(theta_mesh[::3,::3], phi_mesh[::3,::3], seriesResult[0,::3,::3], seriesResult[1,::3,::3])
+plt.xlabel('Theta-Values')
+plt.ylabel('Phi-Values')
+plt.title('Vector Spherical Harmonics Plot')
+plt.show()
+
+
+#***************Solving Laplace Equation***************
+# t = time.time()
+# print "Finding coefficients..."
+# rho_n = findCoeff(Nval, rho, intN)
+# rho_0 = findCoeff(1, phi, intN)[0]
+# rho_n_solver = rho_n[:]
+# rho_n_solver[0] = rho_0
+# print "Coefficients Found!"
+#
+# print "Solving Laplace equation..."
+# phi_n = np.linalg.solve(LaplaceMatrix(len(rho_n_solver)), rho_n_solver)
+# print "Solved, calculating error list..."
+#
+# checkCoeff = []
+# for check in range(len(phi_n)):
+#     if abs(phi_n[check]) > 1e-6:
+#         checkCoeff.append(1)
+#     else:
+#         checkCoeff.append(0)
+#
+# #List L2 error for each N-value.
+# phiErrorList = calcErrorList(phi_n, Nval, phi, intN)
+# phiError = phiErrorList[len(phiErrorList)-1]
+# print "Errors Calculated!"
+#
+# #Series Solution for Phi
+# print "Determining Series..."
+# phiSeries = SHSeries(np.cos(theta_mesh), phi_mesh, Nval, phi_n)
+# print "Series determined, plotting results..."
+#
+#
+# print "Phi Coefficients:", np.real(phi_n)
+# print "Checking Values of Coeffecients:", checkCoeff
+# print "Phi Error:", phiError
+#
+# elapsedTime = time.time() - t
+# print "Elapsed Time (s):", elapsedTime
+#
+# #Plotting Results
+# ax = plt.axes(projection='3d')
+# ax.plot_surface(theta_mesh, phi_mesh, np.real(phiSeries), cmap = 'viridis', edgecolor='none')
+# ax.plot_surface(theta_mesh, phi_mesh, phi(theta_mesh, phi_mesh), edgecolor='none')
+# ax.set_title('Spherical Harmonics Series for Phi-Function')
+# ax.set_xlabel('Theta-Values')
+# ax.set_ylabel('Phi-Values')
+# plt.show(ax)
+#
+# plt.figure()
+# plt.contourf(theta_mesh, phi_mesh, np.real(phiSeries)-phi(theta_mesh, phi_mesh), 30, cmap='hot')
+# plt.colorbar()
+# plt.title('Error Plot')
+# plt.xlabel('Theta-Values')
+# plt.ylabel('Phi-Values')
+# plt.show()
+#
+# # plt.figure()
+# # plt.contourf(theta_mesh, phi_mesh, np.imag(phiSeries), 30, cmap='hot')
+# # plt.colorbar()
+# # plt.title('Imaginary Values Plot')
+# # plt.xlabel('Theta-Values')
+# # plt.ylabel('Phi-Values')
+# #
+# # plt.figure()
+# # plt.contourf(theta_mesh, phi_mesh, np.real(phiSeries), 30, cmap='hot')
+# # plt.colorbar()
+# # plt.title('Real Values Plot')
+# # plt.xlabel('Theta-Values')
+# # plt.ylabel('Phi-Values')
+#
+# #Scatter plot the phi L2 error versus N
+# plt.figure()
+# plt.scatter(coeffNum, np.log10(phiErrorList))
+# #plt.yscale('log')
+# plt.xlabel('N-Value')
+# plt.ylabel('Log_10 of Phi L2 Error')
+# plt.grid()
+# plt.title('Phi L2 Error for Different N-Values')
+# plt.show()
 
 #******************************************************************************
 
