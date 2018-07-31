@@ -236,9 +236,9 @@ def thetaDerivSH(M, N, phi, theta):
 
 def VecDesiredFunction(theta,phi,kind):
     if kind == 'polar':
-        val = [thetaDerivSH(0, 4, phi, theta), phiDerivSH(0, 4, phi, theta)]
+        val = [thetaDerivSH(0, 1, phi, theta), phiDerivSH(0, 1, phi, theta)]
     elif kind == 'axial':
-        val = [phiDerivSH(0, 4, phi, theta)/np.sin(theta), -np.sin(theta)*thetaDerivSH(0, 4, phi, theta)]
+        val = [phiDerivSH(0, 1, phi, theta)/np.sin(theta), -np.sin(theta)*thetaDerivSH(0, 1, phi, theta)]
     return val
 
 def vectorSH(M, N, phi, theta, kind):
@@ -249,7 +249,17 @@ def vectorSH(M, N, phi, theta, kind):
     return vec
 
 def vecIntegrand(z, phi, n, m ,fn, kind):
-    value = np.dot(np.conj(vectorSH(m, n, phi, np.arccos(z), kind)), fn(np.arccos(z), phi, kind))
+    #Define the spherical metric
+    q_inv = np.zeros((2, 2))
+    q_inv[0, 0] = 1
+    q_inv[1, 1] = 1/(np.sin(np.arccos(z))**2)
+
+    #Inner product involving the spherical metric
+    value = 0
+    for loop1 in range(0,2):
+        for loop2 in range(0,2):
+            value = value + q_inv[loop1, loop2]*np.conj(vectorSH(m, n, phi, np.arccos(z), kind))[loop1]*fn(np.arccos(z), phi, kind)[loop2]
+    #value = np.dot(np.conj(vectorSH(m, n, phi, np.arccos(z), kind)), fn(np.arccos(z), phi, kind))
     return value
 
 def findVecCoeff(Nval, fn, intTerms, kind):
@@ -284,8 +294,19 @@ def VecSHSeries(z, phi, N, coeff, kind):
 
 #Function to integrate over to find error in the Legendre Series
 def L2VecErrorFunction(z, phi, N, coeff, fn, kind):
-    errVal = abs(np.dot(np.conj(VecSHSeries(z, phi, N, coeff, kind) - fn(np.arccos(z), phi, kind)), VecSHSeries(z, phi, N, coeff, kind) - fn(np.arccos(z), phi, kind)))
-    return errVal
+    # Define the spherical metric
+    q_inv = np.zeros((2, 2))
+    q_inv[0, 0] = 1
+    q_inv[1, 1] = 1 / (np.sin(np.arccos(z))**2)
+
+    diff = VecSHSeries(z, phi, N, coeff, kind) - fn(np.arccos(z), phi, kind)
+    errVal = 0
+
+    for loop1 in range(0,2):
+        for loop2 in range(0,2):
+            errVal = errVal + q_inv[loop1, loop2]*np.conj(diff)[loop1]*diff[loop2]
+    #errVal = abs(np.dot(np.conj(VecSHSeries(z, phi, N, coeff, kind) - fn(np.arccos(z), phi, kind)), VecSHSeries(z, phi, N, coeff, kind) - fn(np.arccos(z), phi, kind)))
+    return abs(errVal)
 
 #Loops over every N value up to a maximum, and calculates the L2 error.
 def calcVecErrorList(coeff, Nval, fn, intTerms, kind):
@@ -298,13 +319,13 @@ def calcVecErrorList(coeff, Nval, fn, intTerms, kind):
 
 #*******************************END OF FUNCTIONS*************************************
 
-Nval = 5 #Number of coefficients
+Nval = 2 #Number of coefficients
 intN = 3*Nval #Number of terms in Gauss-Legendre integration
 thetaVals = np.linspace(0, np.pi, 100) + 1e-5#Theta-Values
 phiVals = np.linspace(0, 2*np.pi, 100) + 1e-5 #Phi-Values
 theta_mesh, phi_mesh = np.meshgrid(thetaVals, phiVals) #Make a mesh grid
 coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
-vecKind = 'polar' #The Kind has to be 'polar' or 'axial'
+vecKind = 'axial' #The Kind has to be 'polar' or 'axial'
 # w,v = np.linalg.eig(LaplaceMatrix(17))
 # print w
 # print v
@@ -414,12 +435,12 @@ error = errorList[len(errorList)-1]
 print "Errors Calculated!"
 
 print "Determining Series..."
-seriesResult = VecSHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_n, vecKind)
+seriesResult = np.real(VecSHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_n, vecKind))
 print "Series determined, plotting results..."
 # derivSeriesResult = SHSeries(thetaVals, phiVals, Nval, Cprime_n)
-print np.shape(seriesResult)
+
 #Print Results
-print "Spherical Harmonics Series Coefficients:", np.real(C_n)
+print "Spherical Harmonics Series Coefficients:", C_n
 print "Checking Values of Coeffecients:", checkCoeff
 print "Error:", error
 # print "Derivative Legendre Series Coefficients", Cprime_n
@@ -439,10 +460,15 @@ plt.title('L2 Error for Different N-Values')
 plt.show()
 
 plt.figure()
-plt.quiver(theta_mesh[::3,::3], phi_mesh[::3,::3], seriesResult[0,::3,::3], seriesResult[1,::3,::3])
+plt.quiver(theta_mesh[::4,::4], phi_mesh[::4,::4], seriesResult[0,::4,::4], seriesResult[1,::4,::4])
 plt.xlabel('Theta-Values')
 plt.ylabel('Phi-Values')
 plt.title('Vector Spherical Harmonics Plot')
+plt.figure()
+plt.quiver(theta_mesh[::4,::4], phi_mesh[::4,::4], np.real(VecDesiredFunction(theta_mesh, phi_mesh, vecKind))[0][::4,::4], np.real(VecDesiredFunction(theta_mesh, phi_mesh, vecKind))[1][::4,::4], color = 'r')
+plt.xlabel('Theta-Values')
+plt.ylabel('Phi-Values')
+plt.title('Vector Desired Function Plot')
 plt.show()
 
 
