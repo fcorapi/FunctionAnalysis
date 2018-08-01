@@ -224,21 +224,79 @@ def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, args):
 #*********************************************VECTOR SPHERICAL HARMONICS*************************************
 #Partial Phi derivative of a spherical harmonic
 def phiDerivSH(M, N, phi, theta):
-    eps = 1e-6
+    eps = 1e-5
     deriv = (sph_harm(M, N, phi + 0.5*eps, theta) - sph_harm(M, N, phi - 0.5*eps, theta))/eps
     return deriv
 
 #Partial Theta derivative of a spherical harmonic
 def thetaDerivSH(M, N, phi, theta):
-    eps = 1e-6
+    eps = 1e-5
     deriv = (sph_harm(M, N, phi, theta + 0.5*eps) - sph_harm(M, N, phi, theta - 0.5*eps))/eps
     return deriv
 
 def VecDesiredFunction(theta,phi,kind):
     if kind == 'polar':
-        val = [thetaDerivSH(0, 1, phi, theta), phiDerivSH(0, 1, phi, theta)]
+        val = [-thetaDerivSH(0, 1, phi, theta), -phiDerivSH(0, 1, phi, theta)]
     elif kind == 'axial':
-        val = [phiDerivSH(0, 1, phi, theta)/np.sin(theta), -np.sin(theta)*thetaDerivSH(0, 1, phi, theta)]
+        val = [phiDerivSH(0, 1, phi, theta)/np.sin(theta), -np.sin(theta) * thetaDerivSH(0, 1, phi, theta)]
+    return val
+
+#Representing Phi1 vector field from Korzynski paper using vector SH
+def Phi1(theta, phi, kind):
+    if kind == 'axial':
+        val = np.subtract([-0.5 * phiDerivSH(1, 1, phi, theta)/np.sin(theta), 0.5 * np.sin(theta) * thetaDerivSH(1, 1, phi, theta)],
+                          [-0.5 * phiDerivSH(-1, 1, phi, theta)/np.sin(theta), 0.5 * np.sin(theta) * thetaDerivSH(-1, 1, phi, theta)])
+    elif kind == 'polar':
+        val = [0,0]
+        print "Error, Phi1 is not a polar vector!"
+    return val
+
+#Representing Phi2 vector field from Korzynski paper using vector SH
+def Phi2(theta, phi, kind):
+    if kind == 'axial':
+        val = np.add([0.5j * phiDerivSH(1, 1, phi, theta)/np.sin(theta), -0.5j * np.sin(theta) * thetaDerivSH(1, 1, phi, theta)],
+                     [0.5j * phiDerivSH(-1, 1, phi, theta)/np.sin(theta), -0.5j * np.sin(theta) * thetaDerivSH(-1, 1, phi, theta)])
+    elif kind == 'polar':
+        val = [0,0]
+        print "Error, Phi2 is not a polar vector!"
+    return val
+
+#Representing Phi3 vector field from Korzynski paper using vector SH
+def Phi3(theta, phi, kind):
+    if kind == 'axial':
+        val = [phiDerivSH(0, 1, phi, theta)/np.sin(theta), -np.sin(theta) * thetaDerivSH(0, 1, phi, theta)]
+    elif kind == 'polar':
+        val = [0,0]
+        print "Error, Phi3 is not a polar vector!"
+    return val
+
+#Representing Xi1 vector field from Korzynski paper using vector SH
+def Xi1(theta, phi, kind):
+    if kind == 'polar':
+        val = np.subtract([0.5 * thetaDerivSH(1, 1, phi, theta), 0.5 * phiDerivSH(1, 1, phi, theta)],
+                          [0.5 * thetaDerivSH(-1, 1, phi, theta), 0.5 * phiDerivSH(-1, 1, phi, theta)])
+    elif kind == 'axial':
+        val = [0,0]
+        print "Error, Xi1 is not an axial vector!"
+    return val
+
+#Representing Xi2 vector field from Korzynski paper using vector SH
+def Xi2(theta, phi, kind):
+    if kind == 'polar':
+        val = np.add([-0.5j * thetaDerivSH(1, 1, phi, theta), -0.5j * phiDerivSH(1, 1, phi, theta)],
+                     [-0.5j * thetaDerivSH(-1, 1, phi, theta), -0.5j * phiDerivSH(-1, 1, phi, theta)])
+    elif kind == 'axial':
+        val = [0,0]
+        print "Error, Xi2 is not an axial vector!"
+    return val
+
+#Representing Xi3 vector field from Korzynski paper using vector SH
+def Xi3(theta, phi, kind):
+    if kind == 'polar':
+        val = [-thetaDerivSH(0, 1, phi, theta), -phiDerivSH(0, 1, phi, theta)]
+    elif kind == 'axial':
+        val = [0,0]
+        print "Error, Xi3 is not an axial vector!"
     return val
 
 def vectorSH(M, N, phi, theta, kind):
@@ -325,7 +383,7 @@ thetaVals = np.linspace(0, np.pi, 100) + 1e-5#Theta-Values
 phiVals = np.linspace(0, 2*np.pi, 100) + 1e-5 #Phi-Values
 theta_mesh, phi_mesh = np.meshgrid(thetaVals, phiVals) #Make a mesh grid
 coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
-vecKind = 'axial' #The Kind has to be 'polar' or 'axial'
+
 # w,v = np.linalg.eig(LaplaceMatrix(17))
 # print w
 # print v
@@ -413,7 +471,8 @@ vecKind = 'axial' #The Kind has to be 'polar' or 'axial'
 
 #***********Representing Desired Vector Function*****************
 t = time.time()
-#print sph_harm(0,0,0,0)
+vecKind = 'axial' #The Kind has to be 'polar' or 'axial'
+
 print "Finding coefficients..."
 C_n = findVecCoeff(Nval, VecDesiredFunction, intN, vecKind) #Coefficients of Desired Function
 print "Coefficients Found!"
@@ -435,7 +494,8 @@ error = errorList[len(errorList)-1]
 print "Errors Calculated!"
 
 print "Determining Series..."
-seriesResult = np.real(VecSHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_n, vecKind))
+seriesResult = VecSHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_n, vecKind)
+print np.imag(seriesResult)
 print "Series determined, plotting results..."
 # derivSeriesResult = SHSeries(thetaVals, phiVals, Nval, Cprime_n)
 
@@ -456,19 +516,22 @@ plt.scatter(coeffNum, np.log10(errorList))
 plt.xlabel('N-Value')
 plt.ylabel('Log_10 of L2 Error')
 plt.grid()
-plt.title('L2 Error for Different N-Values')
+plt.title('L2 Error for Different N-Values $(\\phi_3)$')
 plt.show()
 
+#Plotting the vector fields using quiver
 plt.figure()
-plt.quiver(theta_mesh[::4,::4], phi_mesh[::4,::4], seriesResult[0,::4,::4], seriesResult[1,::4,::4])
-plt.xlabel('Theta-Values')
-plt.ylabel('Phi-Values')
-plt.title('Vector Spherical Harmonics Plot')
+plt.quiver(phi_mesh[::4,::4], theta_mesh[::4,::4], seriesResult[1,::4,::4], -seriesResult[0,::4,::4])
+plt.xlabel('$\\phi$-Values')
+plt.ylabel('$\\theta$-Values')
+plt.gca().invert_yaxis()
+plt.title('Vector Spherical Harmonics Series Plot $(\\phi_3)$')
 plt.figure()
-plt.quiver(theta_mesh[::4,::4], phi_mesh[::4,::4], np.real(VecDesiredFunction(theta_mesh, phi_mesh, vecKind))[0][::4,::4], np.real(VecDesiredFunction(theta_mesh, phi_mesh, vecKind))[1][::4,::4], color = 'r')
-plt.xlabel('Theta-Values')
-plt.ylabel('Phi-Values')
-plt.title('Vector Desired Function Plot')
+plt.quiver(phi_mesh[::4,::4], theta_mesh[::4,::4], VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[1][::4,::4], -VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[0][::4,::4], color = 'r')
+plt.xlabel('$\\phi$-Values')
+plt.ylabel('$\\theta$-Values')
+plt.gca().invert_yaxis()
+plt.title('Vector Desired Function Plot $(\\phi_3)$')
 plt.show()
 
 
