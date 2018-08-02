@@ -3,24 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="09d3bd09-5e88-4a8d-ae46-5a10a4ff2713" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/SphericalHarmonicsDE.py" beforeDir="false" afterPath="$PROJECT_DIR$/SphericalHarmonicsDE.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Phi1_Axial_Error.png" beforeDir="false" afterPath="$PROJECT_DIR$/VecSHPlots/Phi1_Axial_Error.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Phi1_Axial_Field_Desired_Real.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Phi1_Axial_Field_Series_Real.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Phi2_Axial_Error.png" beforeDir="false" afterPath="$PROJECT_DIR$/VecSHPlots/Phi2_Axial_Error.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Phi2_Axial_Field_Desired_Real.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Phi2_Axial_Field_Series_Real.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Phi3_Axial_Error.png" beforeDir="false" afterPath="$PROJECT_DIR$/VecSHPlots/Phi3_Axial_Error.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Phi3_Axial_Field_Desired_Real.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Phi3_Axial_Field_Series_Real.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Xi1_Polar_Error.png" beforeDir="false" afterPath="$PROJECT_DIR$/VecSHPlots/Xi1_Polar_Error.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Xi1_Polar_Field_Desired_Real.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Xi1_Polar_Field_Series_Real.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Xi2_Polar_Error.png" beforeDir="false" afterPath="$PROJECT_DIR$/VecSHPlots/Xi2_Polar_Error.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Xi2_Polar_Field_Desired_Real.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Xi2_Polar_Field_Series_Real.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Xi3_Polar_Error.png" beforeDir="false" afterPath="$PROJECT_DIR$/VecSHPlots/Xi3_Polar_Error.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Xi3_Polar_Field_Desired_Real.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/VecSHPlots/Xi3_Polar_Field_Series_Real.png" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -34,8 +16,8 @@
       <file leaf-file-name="SphericalHarmonicsDE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SphericalHarmonicsDE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="299">
-              <caret line="269" column="26" selection-start-line="269" selection-start-column="26" selection-end-line="269" selection-end-column="26" />
+            <state relative-caret-position="-525">
+              <caret line="500" column="16" selection-start-line="500" selection-start-column="16" selection-end-line="500" selection-end-column="16" />
               <folding>
                 <element signature="e#237#255#0" expanded="true" />
               </folding>
@@ -445,8 +427,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SphericalHarmonicsDE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="299">
-          <caret line="269" column="26" selection-start-line="269" selection-start-column="26" selection-end-line="269" selection-end-column="26" />
+        <state relative-caret-position="-525">
+          <caret line="500" column="16" selection-start-line="500" selection-start-column="16" selection-end-line="500" selection-end-column="16" />
           <folding>
             <element signature="e#237#255#0" expanded="true" />
           </folding>

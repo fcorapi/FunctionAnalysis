@@ -2,7 +2,7 @@
 #This script takes a given function and represents it as a series of Spherical Harmonics,
 #and will eventually work to solve DEs.
 #Frank Corapi (fcorapi@uwaterloo.ca)
-#Last Modified: 07/05/2018
+#Last Modified: 08/02/2018
 
 #Import Directories
 import numpy as np
@@ -375,6 +375,33 @@ def calcVecErrorList(coeff, Nval, fn, intTerms, kind):
         print "Error for N = ", maxN, " completed."
     return errList
 
+
+#******************Functions needed to calculate angular momentum integrals************************
+
+#Define the one-form omega used for angular momentum calculations
+def omega(theta, phi, N, wcoeff, kind):
+    val = VecSHSeries(np.cos(theta), phi, N, wcoeff, kind)
+    return val
+
+def JKIntegrand(z, phi, w, vecFn, N, wcoeff, wKind, fnKind):
+    # Define the spherical metric
+    q_inv = np.zeros((2, 2))
+    q_inv[0, 0] = 1
+    q_inv[1, 1] = 1 / (np.sin(np.arccos(z)) ** 2)
+
+    # Inner product involving the spherical metric
+    value = 0
+    for loop1 in range(0, 2):
+        for loop2 in range(0, 2):
+            value = value + q_inv[loop1, loop2] * w(np.arccos(z), phi, N, wcoeff, wKind)[loop1] * vecFn(np.arccos(z), phi, fnKind)[loop2]
+    # value = np.dot(np.conj(vectorSH(m, n, phi, np.arccos(z), kind)), fn(np.arccos(z), phi, kind))
+    return value
+
+def calculateJK(w, vecFn, N, intTerms, wcoeff, wKind, fnKind):
+
+    integralValue = GL_Quad_2D(JKIntegrand, -1.0, 1.0, 0, 2 * np.pi, intTerms, args=(w, vecFn, N, wcoeff, wKind, fnKind,))
+
+    return integralValue
 #*******************************END OF FUNCTIONS*************************************
 
 Nval = 2 #Number of coefficients
@@ -474,7 +501,7 @@ t = time.time()
 vecKind = 'axial' #The Kind has to be 'polar' or 'axial'
 
 print "Finding coefficients..."
-C_n = findVecCoeff(Nval, VecDesiredFunction, intN, vecKind) #Coefficients of Desired Function
+C_n = findVecCoeff(Nval, Phi3, intN, vecKind) #Coefficients of Desired Function
 print "Coefficients Found!"
 # Cprime_n = calcDeriv(2, C_n) #Coefficients of the derivative of the function
 
@@ -506,6 +533,24 @@ print "Error:", error
 # print "Derivative Legendre Series Coefficients", Cprime_n
 # print "Derivative Error:", derivError
 
+
+#Calculating the J and K values from the Korzynski paper.
+J1 = calculateJK(omega, Phi1, Nval, intN, C_n, vecKind, 'axial')
+J2 = calculateJK(omega, Phi2, Nval, intN, C_n, vecKind, 'axial')
+J3 = calculateJK(omega, Phi3, Nval, intN, C_n, vecKind, 'axial')
+K1 = calculateJK(omega, Xi1, Nval, intN, C_n, vecKind, 'polar')
+K2 = calculateJK(omega, Xi2, Nval, intN, C_n, vecKind, 'polar')
+K3 = calculateJK(omega, Xi3, Nval, intN, C_n, vecKind, 'polar')
+
+#Printing the results of the calculated J and K values.
+print "The omega one-form is equal to the co-vector phi_3."
+print "J_1 = ", J1
+print "J_2 = ", J2
+print "J_3 = ", J3
+print "K_1 = ", K1
+print "K_2 = ", K2
+print "K_3 = ", K3
+
 elapsedTime = time.time() - t
 print "Elapsed Time (s):", elapsedTime
 
@@ -527,7 +572,8 @@ plt.ylabel('$\\theta$-Values')
 plt.gca().invert_yaxis()
 plt.title('Vector Spherical Harmonics Series Plot $(\\phi_3)$')
 plt.figure()
-plt.quiver(phi_mesh[::4,::4], theta_mesh[::4,::4], VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[1][::4,::4], -VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[0][::4,::4], color = 'r')
+plt.quiver(phi_mesh[::4,::4], theta_mesh[::4,::4], VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[1][::4,::4],
+           -VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[0][::4,::4], color = 'r')
 plt.xlabel('$\\phi$-Values')
 plt.ylabel('$\\theta$-Values')
 plt.gca().invert_yaxis()
