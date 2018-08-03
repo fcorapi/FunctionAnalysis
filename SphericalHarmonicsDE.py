@@ -235,17 +235,19 @@ def thetaDerivSH(M, N, phi, theta):
     return deriv
 
 def VecDesiredFunction(theta,phi,kind):
+    A = 2 * np.sqrt((np.pi) / 3)
     if kind == 'polar':
-        val = [-thetaDerivSH(0, 1, phi, theta), -phiDerivSH(0, 1, phi, theta)]
+        val = [-A*thetaDerivSH(0, 1, phi, theta), -A*phiDerivSH(0, 1, phi, theta)]
     elif kind == 'axial':
-        val = [phiDerivSH(0, 1, phi, theta)/np.sin(theta), -np.sin(theta) * thetaDerivSH(0, 1, phi, theta)]
+        val = [A*phiDerivSH(0, 1, phi, theta)/np.sin(theta), -A*np.sin(theta) * thetaDerivSH(0, 1, phi, theta)]
     return val
 
 #Representing Phi1 vector field from Korzynski paper using vector SH
 def Phi1(theta, phi, kind):
     if kind == 'axial':
-        val = np.subtract([-0.5 * phiDerivSH(1, 1, phi, theta)/np.sin(theta), 0.5 * np.sin(theta) * thetaDerivSH(1, 1, phi, theta)],
-                          [-0.5 * phiDerivSH(-1, 1, phi, theta)/np.sin(theta), 0.5 * np.sin(theta) * thetaDerivSH(-1, 1, phi, theta)])
+        A = 2*np.sqrt((2*np.pi)/3)
+        val = np.subtract([-0.5 * A * phiDerivSH(1, 1, phi, theta)/np.sin(theta), 0.5 * A * np.sin(theta) * thetaDerivSH(1, 1, phi, theta)],
+                          [-0.5 * A * phiDerivSH(-1, 1, phi, theta)/np.sin(theta), 0.5 * A * np.sin(theta) * thetaDerivSH(-1, 1, phi, theta)])
     elif kind == 'polar':
         val = [0,0]
         print "Error, Phi1 is not a polar vector!"
@@ -254,8 +256,9 @@ def Phi1(theta, phi, kind):
 #Representing Phi2 vector field from Korzynski paper using vector SH
 def Phi2(theta, phi, kind):
     if kind == 'axial':
-        val = np.add([0.5j * phiDerivSH(1, 1, phi, theta)/np.sin(theta), -0.5j * np.sin(theta) * thetaDerivSH(1, 1, phi, theta)],
-                     [0.5j * phiDerivSH(-1, 1, phi, theta)/np.sin(theta), -0.5j * np.sin(theta) * thetaDerivSH(-1, 1, phi, theta)])
+        A = 2 * np.sqrt((2 * np.pi) / 3)
+        val = np.add([0.5j * A * phiDerivSH(1, 1, phi, theta)/np.sin(theta), -0.5j * A * np.sin(theta) * thetaDerivSH(1, 1, phi, theta)],
+                     [0.5j * A * phiDerivSH(-1, 1, phi, theta)/np.sin(theta), -0.5j * A * np.sin(theta) * thetaDerivSH(-1, 1, phi, theta)])
     elif kind == 'polar':
         val = [0,0]
         print "Error, Phi2 is not a polar vector!"
@@ -264,7 +267,8 @@ def Phi2(theta, phi, kind):
 #Representing Phi3 vector field from Korzynski paper using vector SH
 def Phi3(theta, phi, kind):
     if kind == 'axial':
-        val = [phiDerivSH(0, 1, phi, theta)/np.sin(theta), -np.sin(theta) * thetaDerivSH(0, 1, phi, theta)]
+        A = 2 * np.sqrt((np.pi) / 3)
+        val = [A * phiDerivSH(0, 1, phi, theta)/np.sin(theta), -A * np.sin(theta) * thetaDerivSH(0, 1, phi, theta)]
     elif kind == 'polar':
         val = [0,0]
         print "Error, Phi3 is not a polar vector!"
@@ -273,8 +277,9 @@ def Phi3(theta, phi, kind):
 #Representing Xi1 vector field from Korzynski paper using vector SH
 def Xi1(theta, phi, kind):
     if kind == 'polar':
-        val = np.subtract([0.5 * thetaDerivSH(1, 1, phi, theta), 0.5 * phiDerivSH(1, 1, phi, theta)],
-                          [0.5 * thetaDerivSH(-1, 1, phi, theta), 0.5 * phiDerivSH(-1, 1, phi, theta)])
+        A = 2 * np.sqrt((2 * np.pi) / 3)
+        val = np.subtract([0.5 * A * thetaDerivSH(1, 1, phi, theta), 0.5 * A * phiDerivSH(1, 1, phi, theta)],
+                          [0.5 * A * thetaDerivSH(-1, 1, phi, theta), 0.5 * A * phiDerivSH(-1, 1, phi, theta)])
     elif kind == 'axial':
         val = [0,0]
         print "Error, Xi1 is not an axial vector!"
@@ -283,8 +288,9 @@ def Xi1(theta, phi, kind):
 #Representing Xi2 vector field from Korzynski paper using vector SH
 def Xi2(theta, phi, kind):
     if kind == 'polar':
-        val = np.add([-0.5j * thetaDerivSH(1, 1, phi, theta), -0.5j * phiDerivSH(1, 1, phi, theta)],
-                     [-0.5j * thetaDerivSH(-1, 1, phi, theta), -0.5j * phiDerivSH(-1, 1, phi, theta)])
+        A = 2 * np.sqrt((2 * np.pi) / 3)
+        val = np.add([-0.5j * A * thetaDerivSH(1, 1, phi, theta), -0.5j * A * phiDerivSH(1, 1, phi, theta)],
+                     [-0.5j * A * thetaDerivSH(-1, 1, phi, theta), -0.5j * A * phiDerivSH(-1, 1, phi, theta)])
     elif kind == 'axial':
         val = [0,0]
         print "Error, Xi2 is not an axial vector!"
@@ -293,7 +299,8 @@ def Xi2(theta, phi, kind):
 #Representing Xi3 vector field from Korzynski paper using vector SH
 def Xi3(theta, phi, kind):
     if kind == 'polar':
-        val = [-thetaDerivSH(0, 1, phi, theta), -phiDerivSH(0, 1, phi, theta)]
+        A = 2 * np.sqrt((np.pi) / 3)
+        val = [-A * thetaDerivSH(0, 1, phi, theta), -A * phiDerivSH(0, 1, phi, theta)]
     elif kind == 'axial':
         val = [0,0]
         print "Error, Xi3 is not an axial vector!"
@@ -410,7 +417,7 @@ thetaVals = np.linspace(0, np.pi, 100) + 1e-5#Theta-Values
 phiVals = np.linspace(0, 2*np.pi, 100) + 1e-5 #Phi-Values
 theta_mesh, phi_mesh = np.meshgrid(thetaVals, phiVals) #Make a mesh grid
 coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
-
+G = 1 #Graviational constant
 # w,v = np.linalg.eig(LaplaceMatrix(17))
 # print w
 # print v
@@ -535,21 +542,34 @@ print "Error:", error
 
 
 #Calculating the J and K values from the Korzynski paper.
-J1 = calculateJK(omega, Phi1, Nval, intN, C_n, vecKind, 'axial')
-J2 = calculateJK(omega, Phi2, Nval, intN, C_n, vecKind, 'axial')
-J3 = calculateJK(omega, Phi3, Nval, intN, C_n, vecKind, 'axial')
-K1 = calculateJK(omega, Xi1, Nval, intN, C_n, vecKind, 'polar')
-K2 = calculateJK(omega, Xi2, Nval, intN, C_n, vecKind, 'polar')
-K3 = calculateJK(omega, Xi3, Nval, intN, C_n, vecKind, 'polar')
+J1 = (-1/(8*np.pi*G))*calculateJK(omega, Phi1, Nval, intN, C_n, vecKind, 'axial')
+J2 = (-1/(8*np.pi*G))*calculateJK(omega, Phi2, Nval, intN, C_n, vecKind, 'axial')
+J3 = (-1/(8*np.pi*G))*calculateJK(omega, Phi3, Nval, intN, C_n, vecKind, 'axial')
+K1 = (-1/(8*np.pi*G))*calculateJK(omega, Xi1, Nval, intN, C_n, vecKind, 'polar')
+K2 = (-1/(8*np.pi*G))*calculateJK(omega, Xi2, Nval, intN, C_n, vecKind, 'polar')
+K3 = (-1/(8*np.pi*G))*calculateJK(omega, Xi3, Nval, intN, C_n, vecKind, 'polar')
+
+#Calculate the values of the invariants A and B from the  Korzynski paper
+invariantA = (J1*J1 + J2*J2 + J3*J3) - (K1*K1 + K2*K2 + K3*K3)
+invariantB = K1*J1 + K2*J2 + K3*J3
+
+#Final value for the Angular Momentum
+J = np.sqrt((invariantA + np.sqrt(invariantA**2 + 4*(invariantB**2)))/2)
+
 
 #Printing the results of the calculated J and K values.
 print "The omega one-form is equal to the co-vector phi_3."
+print "The value of 8pi/3 is:", 8*np.pi/3
 print "J_1 = ", J1
 print "J_2 = ", J2
 print "J_3 = ", J3
 print "K_1 = ", K1
 print "K_2 = ", K2
 print "K_3 = ", K3
+
+print "A = ", invariantA
+print "B = ", invariantB
+print "J = ", J
 
 elapsedTime = time.time() - t
 print "Elapsed Time (s):", elapsedTime

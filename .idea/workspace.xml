@@ -16,8 +16,8 @@
       <file leaf-file-name="SphericalHarmonicsDE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SphericalHarmonicsDE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-525">
-              <caret line="500" column="16" selection-start-line="500" selection-start-column="16" selection-end-line="500" selection-end-column="16" />
+            <state relative-caret-position="180">
+              <caret line="550" lean-forward="true" selection-start-line="550" selection-end-line="550" />
               <folding>
                 <element signature="e#237#255#0" expanded="true" />
               </folding>
@@ -241,7 +241,7 @@
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.26072606" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.31518152" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.34818482" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.3581818" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -427,8 +427,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SphericalHarmonicsDE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-525">
-          <caret line="500" column="16" selection-start-line="500" selection-start-column="16" selection-end-line="500" selection-end-column="16" />
+        <state relative-caret-position="180">
+          <caret line="550" lean-forward="true" selection-start-line="550" selection-end-line="550" />
           <folding>
             <element signature="e#237#255#0" expanded="true" />
           </folding>
