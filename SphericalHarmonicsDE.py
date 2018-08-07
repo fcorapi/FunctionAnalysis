@@ -215,13 +215,18 @@ def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, args):
     for z_i in roots:
         phiValue = 0
         for phi in phiVals:
-                phiValue = deltaPhi * integrand(((upZ - lowZ) / 2.0) * z_i + ((upZ + lowZ) / 2.0), phi, *args) + phiValue
+                phiValue = deltaPhi * psi4(z_i) * integrand(((upZ - lowZ) / 2.0) * z_i + ((upZ + lowZ) / 2.0), phi, *args) + phiValue
         value = weight(z_i)*phiValue + value
 
     value = ((upZ-lowZ)/2.0)*value
     return value
 
 #*********************************************VECTOR SPHERICAL HARMONICS*************************************
+#Define conformal factor
+def psi4(z):
+    factor = 1 - z**2
+    return factor
+
 #Partial Phi derivative of a spherical harmonic
 def phiDerivSH(M, N, phi, theta):
     eps = 1e-5
@@ -323,7 +328,7 @@ def vecIntegrand(z, phi, n, m ,fn, kind):
     value = 0
     for loop1 in range(0,2):
         for loop2 in range(0,2):
-            value = value + q_inv[loop1, loop2]*np.conj(vectorSH(m, n, phi, np.arccos(z), kind))[loop1]*fn(np.arccos(z), phi, kind)[loop2]
+            value = value + (1/psi4(z)) * q_inv[loop1, loop2]*np.conj(vectorSH(m, n, phi, np.arccos(z), kind))[loop1]*fn(np.arccos(z), phi, kind)[loop2]
     #value = np.dot(np.conj(vectorSH(m, n, phi, np.arccos(z), kind)), fn(np.arccos(z), phi, kind))
     return value
 
@@ -369,7 +374,7 @@ def L2VecErrorFunction(z, phi, N, coeff, fn, kind):
 
     for loop1 in range(0,2):
         for loop2 in range(0,2):
-            errVal = errVal + q_inv[loop1, loop2]*np.conj(diff)[loop1]*diff[loop2]
+            errVal = errVal + (1/psi4(z))*q_inv[loop1, loop2]*np.conj(diff)[loop1]*diff[loop2]
     #errVal = abs(np.dot(np.conj(VecSHSeries(z, phi, N, coeff, kind) - fn(np.arccos(z), phi, kind)), VecSHSeries(z, phi, N, coeff, kind) - fn(np.arccos(z), phi, kind)))
     return abs(errVal)
 
@@ -384,6 +389,10 @@ def calcVecErrorList(coeff, Nval, fn, intTerms, kind):
 
 
 #******************Functions needed to calculate angular momentum integrals************************
+
+#Function returning one
+def oneFunction(z, phi):
+    return 1
 
 #Define the one-form omega used for angular momentum calculations
 def omega(theta, phi, N, wcoeff, kind):
@@ -400,7 +409,7 @@ def JKIntegrand(z, phi, w, vecFn, N, wcoeff, wKind, fnKind):
     value = 0
     for loop1 in range(0, 2):
         for loop2 in range(0, 2):
-            value = value + q_inv[loop1, loop2] * w(np.arccos(z), phi, N, wcoeff, wKind)[loop1] * vecFn(np.arccos(z), phi, fnKind)[loop2]
+            value = value + (1/psi4(z)) * q_inv[loop1, loop2] * w(np.arccos(z), phi, N, wcoeff, wKind)[loop1] * vecFn(np.arccos(z), phi, fnKind)[loop2]
     # value = np.dot(np.conj(vectorSH(m, n, phi, np.arccos(z), kind)), fn(np.arccos(z), phi, kind))
     return value
 
@@ -418,6 +427,7 @@ phiVals = np.linspace(0, 2*np.pi, 100) + 1e-5 #Phi-Values
 theta_mesh, phi_mesh = np.meshgrid(thetaVals, phiVals) #Make a mesh grid
 coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
 G = 1 #Graviational constant
+c = 1 #Speed of light
 # w,v = np.linalg.eig(LaplaceMatrix(17))
 # print w
 # print v
@@ -556,10 +566,15 @@ invariantB = K1*J1 + K2*J2 + K3*J3
 #Final value for the Angular Momentum
 J = np.sqrt((invariantA + np.sqrt(invariantA**2 + 4*(invariantB**2)))/2)
 
+#Calculate properties of the sphere
+area = GL_Quad_2D(oneFunction, -1, 1, 0, 2*np.pi, intN, args=())
+arealRadius = np.sqrt(area/(4*np.pi))
+irrMass = arealRadius/2
+mass = np.sqrt(irrMass**2 + J**2/(4*(irrMass**2)))
+spin = J/(mass**2)
 
 #Printing the results of the calculated J and K values.
 print "The omega one-form is equal to the co-vector phi_3."
-print "The value of 8pi/3 is:", 8*np.pi/3
 print "J_1 = ", J1
 print "J_2 = ", J2
 print "J_3 = ", J3
@@ -570,6 +585,13 @@ print "K_3 = ", K3
 print "A = ", invariantA
 print "B = ", invariantB
 print "J = ", J
+
+print "Properties of the Surface:"
+print "Area: ", area
+print "Areal Radius: ", arealRadius
+print "Irreducible Mass: ", irrMass
+print "Mass: ", mass
+print "Spin (a): ", spin
 
 elapsedTime = time.time() - t
 print "Elapsed Time (s):", elapsedTime
