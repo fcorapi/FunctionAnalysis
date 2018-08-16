@@ -61,7 +61,7 @@ def findCoeff(Nval, fn, intTerms):
     # Integrate to determine Legendre series coefficients
     for n in range(0, Nval):
         for m in range(-n, n+1):
-            integralValue = GL_Quad_2D(integrand, -1.0, 1.0, 0, 2*np.pi, intTerms, args=(n, m, fn,))
+            integralValue = GL_Quad_2D(integrand, -1.0, 1.0, 0, 2*np.pi, intTerms, 1, args=(n, m, fn,))
             cval = integralValue
             coeffList.append(cval)
     return coeffList
@@ -167,7 +167,7 @@ def L2ErrorFunction(z, phi, N, coeff, fn):
 def calcErrorList(coeff, Nval, fn, intTerms):
     errList = []
     for maxN in range(1, Nval + 1):
-        err = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, intTerms, args=(maxN, coeff, fn,))
+        err = GL_Quad_2D(L2ErrorFunction, -1.0, 1.0, 0, 2*np.pi, intTerms, 0, args=(maxN, coeff, fn,))
         errList.append(np.sqrt(err))
         print "Error for N = ", maxN, " completed."
     return errList
@@ -190,7 +190,15 @@ def GL_Quad(integrand, lowerBound, upperBound, N, args):
     value = ((upperBound-lowerBound)/2.0)*value
     return value
 
-def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, args):
+def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, round, args):
+
+    if round == 1:
+        def conformalFactor(z,phi):
+            return 1
+    elif round == 0:
+        def conformalFactor(z,phi):
+            return psi4(z,phi)
+
     #Weight Function
     def weight(arg):
         w = (2.0*(1-(arg**2)))/((N*(Legendre(arg, N-1)-arg*Legendre(arg, N)))**2)
@@ -215,7 +223,7 @@ def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, args):
     for z_i in roots:
         phiValue = 0
         for phi in phiVals:
-                phiValue = deltaPhi * psi4(z_i) * integrand(((upZ - lowZ) / 2.0) * z_i + ((upZ + lowZ) / 2.0), phi, *args) + phiValue
+                phiValue = deltaPhi * conformalFactor(z_i,phi) * integrand(((upZ - lowZ) / 2.0) * z_i + ((upZ + lowZ) / 2.0), phi, *args) + phiValue
         value = weight(z_i)*phiValue + value
 
     value = ((upZ-lowZ)/2.0)*value
@@ -223,8 +231,8 @@ def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, args):
 
 #*********************************************VECTOR SPHERICAL HARMONICS*************************************
 #Define conformal factor
-def psi4(z):
-    factor = 1 - z**2
+def psi4(z,phi):
+    factor = 1# - z**2
     return factor
 
 #Partial Phi derivative of a spherical harmonic
@@ -244,13 +252,17 @@ def VecDesiredFunction(theta,phi,kind):
     if kind == 'polar':
         val = [-A*thetaDerivSH(0, 1, phi, theta), -A*phiDerivSH(0, 1, phi, theta)]
     elif kind == 'axial':
-        val = [A*phiDerivSH(0, 1, phi, theta)/np.sin(theta), -A*np.sin(theta) * thetaDerivSH(0, 1, phi, theta)]
+        A = 2 * np.sqrt((2 * np.pi) / 3)
+        val = np.add([0.5j * A * phiDerivSH(1, 1, phi, theta) / np.sin(theta),
+                      -0.5j * A * np.sin(theta) * thetaDerivSH(1, 1, phi, theta)],
+                     [0.5j * A * phiDerivSH(-1, 1, phi, theta) / np.sin(theta),
+                      -0.5j * A * np.sin(theta) * thetaDerivSH(-1, 1, phi, theta)])
     return val
 
-#Representing Phi1 vector field from Korzynski paper using vector SH
+#Representing Phi1 co-vector field from Korzynski paper using vector SH
 def Phi1(theta, phi, kind):
     if kind == 'axial':
-        A = 2*np.sqrt((2*np.pi)/3)
+        A = 2*np.sqrt((2*np.pi)/3)*psi4(np.cos(theta),phi)
         val = np.subtract([-0.5 * A * phiDerivSH(1, 1, phi, theta)/np.sin(theta), 0.5 * A * np.sin(theta) * thetaDerivSH(1, 1, phi, theta)],
                           [-0.5 * A * phiDerivSH(-1, 1, phi, theta)/np.sin(theta), 0.5 * A * np.sin(theta) * thetaDerivSH(-1, 1, phi, theta)])
     elif kind == 'polar':
@@ -258,10 +270,10 @@ def Phi1(theta, phi, kind):
         print "Error, Phi1 is not a polar vector!"
     return val
 
-#Representing Phi2 vector field from Korzynski paper using vector SH
+#Representing Phi2 co-vector field from Korzynski paper using vector SH
 def Phi2(theta, phi, kind):
     if kind == 'axial':
-        A = 2 * np.sqrt((2 * np.pi) / 3)
+        A = 2 * np.sqrt((2 * np.pi) / 3)*psi4(np.cos(theta),phi)
         val = np.add([0.5j * A * phiDerivSH(1, 1, phi, theta)/np.sin(theta), -0.5j * A * np.sin(theta) * thetaDerivSH(1, 1, phi, theta)],
                      [0.5j * A * phiDerivSH(-1, 1, phi, theta)/np.sin(theta), -0.5j * A * np.sin(theta) * thetaDerivSH(-1, 1, phi, theta)])
     elif kind == 'polar':
@@ -269,20 +281,20 @@ def Phi2(theta, phi, kind):
         print "Error, Phi2 is not a polar vector!"
     return val
 
-#Representing Phi3 vector field from Korzynski paper using vector SH
+#Representing Phi3 co-vector field from Korzynski paper using vector SH
 def Phi3(theta, phi, kind):
     if kind == 'axial':
-        A = 2 * np.sqrt((np.pi) / 3)
+        A = 2 * np.sqrt((np.pi) / 3)*psi4(np.cos(theta),phi)
         val = [A * phiDerivSH(0, 1, phi, theta)/np.sin(theta), -A * np.sin(theta) * thetaDerivSH(0, 1, phi, theta)]
     elif kind == 'polar':
         val = [0,0]
         print "Error, Phi3 is not a polar vector!"
     return val
 
-#Representing Xi1 vector field from Korzynski paper using vector SH
+#Representing Xi1 co-vector field from Korzynski paper using vector SH
 def Xi1(theta, phi, kind):
     if kind == 'polar':
-        A = 2 * np.sqrt((2 * np.pi) / 3)
+        A = 2 * np.sqrt((2 * np.pi) / 3)*psi4(np.cos(theta),phi)
         val = np.subtract([0.5 * A * thetaDerivSH(1, 1, phi, theta), 0.5 * A * phiDerivSH(1, 1, phi, theta)],
                           [0.5 * A * thetaDerivSH(-1, 1, phi, theta), 0.5 * A * phiDerivSH(-1, 1, phi, theta)])
     elif kind == 'axial':
@@ -290,10 +302,10 @@ def Xi1(theta, phi, kind):
         print "Error, Xi1 is not an axial vector!"
     return val
 
-#Representing Xi2 vector field from Korzynski paper using vector SH
+#Representing Xi2 co-vector field from Korzynski paper using vector SH
 def Xi2(theta, phi, kind):
     if kind == 'polar':
-        A = 2 * np.sqrt((2 * np.pi) / 3)
+        A = 2 * np.sqrt((2 * np.pi) / 3)*psi4(np.cos(theta),phi)
         val = np.add([-0.5j * A * thetaDerivSH(1, 1, phi, theta), -0.5j * A * phiDerivSH(1, 1, phi, theta)],
                      [-0.5j * A * thetaDerivSH(-1, 1, phi, theta), -0.5j * A * phiDerivSH(-1, 1, phi, theta)])
     elif kind == 'axial':
@@ -301,10 +313,10 @@ def Xi2(theta, phi, kind):
         print "Error, Xi2 is not an axial vector!"
     return val
 
-#Representing Xi3 vector field from Korzynski paper using vector SH
+#Representing Xi3 co-vector field from Korzynski paper using vector SH
 def Xi3(theta, phi, kind):
     if kind == 'polar':
-        A = 2 * np.sqrt((np.pi) / 3)
+        A = 2 * np.sqrt((np.pi) / 3)*psi4(np.cos(theta),phi)
         val = [-A * thetaDerivSH(0, 1, phi, theta), -A * phiDerivSH(0, 1, phi, theta)]
     elif kind == 'axial':
         val = [0,0]
@@ -328,7 +340,7 @@ def vecIntegrand(z, phi, n, m ,fn, kind):
     value = 0
     for loop1 in range(0,2):
         for loop2 in range(0,2):
-            value = value + (1/psi4(z)) * q_inv[loop1, loop2]*np.conj(vectorSH(m, n, phi, np.arccos(z), kind))[loop1]*fn(np.arccos(z), phi, kind)[loop2]
+            value = value + q_inv[loop1, loop2]*np.conj(vectorSH(m, n, phi, np.arccos(z), kind))[loop1]*fn(np.arccos(z), phi, kind)[loop2]
     #value = np.dot(np.conj(vectorSH(m, n, phi, np.arccos(z), kind)), fn(np.arccos(z), phi, kind))
     return value
 
@@ -337,7 +349,7 @@ def findVecCoeff(Nval, fn, intTerms, kind):
     # Integrate to determine Legendre series coefficients
     for n in range(0, Nval):
         for m in range(-n, n+1):
-            integralValue = GL_Quad_2D(vecIntegrand, -1.0, 1.0, 0, 2*np.pi, intTerms, args=(n, m, fn, kind,))
+            integralValue = GL_Quad_2D(vecIntegrand, -1.0, 1.0, 0, 2*np.pi, intTerms, 1, args=(n, m, fn, kind,))
             if n == 0:
                 cval = integralValue
             else:
@@ -374,7 +386,7 @@ def L2VecErrorFunction(z, phi, N, coeff, fn, kind):
 
     for loop1 in range(0,2):
         for loop2 in range(0,2):
-            errVal = errVal + (1/psi4(z))*q_inv[loop1, loop2]*np.conj(diff)[loop1]*diff[loop2]
+            errVal = errVal + (1/psi4(z,phi))*q_inv[loop1, loop2]*np.conj(diff)[loop1]*diff[loop2]
     #errVal = abs(np.dot(np.conj(VecSHSeries(z, phi, N, coeff, kind) - fn(np.arccos(z), phi, kind)), VecSHSeries(z, phi, N, coeff, kind) - fn(np.arccos(z), phi, kind)))
     return abs(errVal)
 
@@ -382,7 +394,7 @@ def L2VecErrorFunction(z, phi, N, coeff, fn, kind):
 def calcVecErrorList(coeff, Nval, fn, intTerms, kind):
     errList = []
     for maxN in range(1, Nval + 1):
-        err = GL_Quad_2D(L2VecErrorFunction, -1.0, 1.0, 0, 2*np.pi, intTerms, args=(maxN, coeff, fn, kind,))
+        err = GL_Quad_2D(L2VecErrorFunction, -1.0, 1.0, 0, 2*np.pi, intTerms, 0, args=(maxN, coeff, fn, kind,))
         errList.append(np.sqrt(err))
         print "Error for N = ", maxN, " completed."
     return errList
@@ -409,19 +421,19 @@ def JKIntegrand(z, phi, w, vecFn, N, wcoeff, wKind, fnKind):
     value = 0
     for loop1 in range(0, 2):
         for loop2 in range(0, 2):
-            value = value + (1/psi4(z)) * q_inv[loop1, loop2] * w(np.arccos(z), phi, N, wcoeff, wKind)[loop1] * vecFn(np.arccos(z), phi, fnKind)[loop2]
+            value = value + (1/psi4(z,phi)) * q_inv[loop1, loop2] * w(np.arccos(z), phi, N, wcoeff, wKind)[loop1] * vecFn(np.arccos(z), phi, fnKind)[loop2]
     # value = np.dot(np.conj(vectorSH(m, n, phi, np.arccos(z), kind)), fn(np.arccos(z), phi, kind))
     return value
 
 def calculateJK(w, vecFn, N, intTerms, wcoeff, wKind, fnKind):
 
-    integralValue = GL_Quad_2D(JKIntegrand, -1.0, 1.0, 0, 2 * np.pi, intTerms, args=(w, vecFn, N, wcoeff, wKind, fnKind,))
+    integralValue = GL_Quad_2D(JKIntegrand, -1.0, 1.0, 0, 2 * np.pi, intTerms, 0, args=(w, vecFn, N, wcoeff, wKind, fnKind,))
 
     return integralValue
 #*******************************END OF FUNCTIONS*************************************
 
 Nval = 2 #Number of coefficients
-intN = 3*Nval #Number of terms in Gauss-Legendre integration
+intN = 2*Nval #Number of terms in Gauss-Legendre integration
 thetaVals = np.linspace(0, np.pi, 100) + 1e-5#Theta-Values
 phiVals = np.linspace(0, 2*np.pi, 100) + 1e-5 #Phi-Values
 theta_mesh, phi_mesh = np.meshgrid(thetaVals, phiVals) #Make a mesh grid
@@ -531,7 +543,7 @@ for check in range(len(C_n)):
 
 #List L2 error for each N-value.
 print "Calculating Error List..."
-errorList = calcVecErrorList(C_n, Nval, VecDesiredFunction, intN, vecKind)
+errorList = calcVecErrorList(C_n, Nval, Phi3, intN, vecKind)
 # derivErrorList = calcErrorList(Cprime_n, Nval, DerivFunction, intN)
 error = errorList[len(errorList)-1]
 # derivError = derivErrorList[len(derivErrorList)-1]
@@ -567,7 +579,7 @@ invariantB = K1*J1 + K2*J2 + K3*J3
 J = np.sqrt((invariantA + np.sqrt(invariantA**2 + 4*(invariantB**2)))/2)
 
 #Calculate properties of the sphere
-area = GL_Quad_2D(oneFunction, -1, 1, 0, 2*np.pi, intN, args=())
+area = GL_Quad_2D(oneFunction, -1, 1, 0, 2*np.pi, intN, 0, args=())
 arealRadius = np.sqrt(area/(4*np.pi))
 irrMass = arealRadius/2
 mass = np.sqrt(irrMass**2 + J**2/(4*(irrMass**2)))
@@ -614,8 +626,8 @@ plt.ylabel('$\\theta$-Values')
 plt.gca().invert_yaxis()
 plt.title('Vector Spherical Harmonics Series Plot $(\\phi_3)$')
 plt.figure()
-plt.quiver(phi_mesh[::4,::4], theta_mesh[::4,::4], VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[1][::4,::4],
-           -VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[0][::4,::4], color = 'r')
+plt.quiver(phi_mesh[::4,::4], theta_mesh[::4,::4], Phi3(theta_mesh, phi_mesh, vecKind)[1][::4,::4],
+           -Phi3(theta_mesh, phi_mesh, vecKind)[0][::4,::4], color = 'r')
 plt.xlabel('$\\phi$-Values')
 plt.ylabel('$\\theta$-Values')
 plt.gca().invert_yaxis()
