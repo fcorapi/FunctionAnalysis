@@ -629,7 +629,7 @@ plt.gca().invert_yaxis()
 plt.title('Vector Spherical Harmonics Series Plot $(\\phi_3)$')
 plt.figure()
 plt.quiver(phi_mesh[::4,::4], theta_mesh[::4,::4], VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[1][::4,::4],
-           -Phi3(theta_mesh, phi_mesh, vecKind)[0][::4,::4], color = 'r')
+           -VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[0][::4,::4], color = 'r')
 plt.xlabel('$\\phi$-Values')
 plt.ylabel('$\\theta$-Values')
 plt.gca().invert_yaxis()
