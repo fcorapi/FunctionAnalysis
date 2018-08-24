@@ -30,12 +30,13 @@ def DesiredFunction(theta,phi):
     return np.real(val)
 
 #Derivative of the desired function
-#NEEDS TO BE MODIFIED
-def DerivFunction(x):
-    val = 20.0*(-20.0)*np.sin(20*x)
-    return val
+#NEEDS TO BE FIXED
+# def DerivFunction(x):
+#     val = 20.0*(-20.0)*np.sin(20*x)
+#     return val
 
 #Analytic result for the phi function
+#TO BE MODIFIED BY USER DEPENDING ON WHICH FUNCTION IS WANTED
 def phi(theta, phi):
     val = 0
     for l in range(0, 25):
@@ -44,6 +45,7 @@ def phi(theta, phi):
     return np.real(val)
 
 #Mass Density Function Example (rho)
+#TO BE MODIFIED BY USER DEPENDING ON WHICH FUNCTION IS WANTED
 def rho(theta, phi):
     val = 0
     for l in range(1, 25):
@@ -530,7 +532,7 @@ t = time.time()
 vecKind = 'axial' #The Kind has to be 'polar' or 'axial'
 
 print "Finding coefficients..."
-C_n = findVecCoeff(Nval, Phi3, intN, vecKind) #Coefficients of Desired Function
+C_n = findVecCoeff(Nval, VecDesiredFunction, intN, vecKind) #Coefficients of Desired Function
 print "Coefficients Found!"
 # Cprime_n = calcDeriv(2, C_n) #Coefficients of the derivative of the function
 
@@ -543,7 +545,7 @@ for check in range(len(C_n)):
 
 #List L2 error for each N-value.
 print "Calculating Error List..."
-errorList = calcVecErrorList(C_n, Nval, Phi3, intN, vecKind)
+errorList = calcVecErrorList(C_n, Nval, VecDesiredFunction, intN, vecKind)
 # derivErrorList = calcErrorList(Cprime_n, Nval, DerivFunction, intN)
 error = errorList[len(errorList)-1]
 # derivError = derivErrorList[len(derivErrorList)-1]
@@ -626,7 +628,7 @@ plt.ylabel('$\\theta$-Values')
 plt.gca().invert_yaxis()
 plt.title('Vector Spherical Harmonics Series Plot $(\\phi_3)$')
 plt.figure()
-plt.quiver(phi_mesh[::4,::4], theta_mesh[::4,::4], Phi3(theta_mesh, phi_mesh, vecKind)[1][::4,::4],
+plt.quiver(phi_mesh[::4,::4], theta_mesh[::4,::4], VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[1][::4,::4],
            -Phi3(theta_mesh, phi_mesh, vecKind)[0][::4,::4], color = 'r')
 plt.xlabel('$\\phi$-Values')
 plt.ylabel('$\\theta$-Values')
@@ -635,11 +637,11 @@ plt.title('Vector Desired Function Plot $(\\phi_3)$')
 plt.show()
 
 
-#***************Solving Laplace Equation***************
+#***************Solving Poissons Equation***************
 # t = time.time()
 # print "Finding coefficients..."
 # rho_n = findCoeff(Nval, rho, intN)
-# rho_0 = findCoeff(1, phi, intN)[0]
+# rho_0 = findCoeff(1, phi, intN)[0] #Specified by the user.
 # rho_n_solver = rho_n[:]
 # rho_n_solver[0] = rho_0
 # print "Coefficients Found!"

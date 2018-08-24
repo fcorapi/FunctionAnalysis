@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="09d3bd09-5e88-4a8d-ae46-5a10a4ff2713" name="Default" comment="" />
+    <list default="true" id="09d3bd09-5e88-4a8d-ae46-5a10a4ff2713" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/SphericalHarmonicsDE.py" beforeDir="false" afterPath="$PROJECT_DIR$/SphericalHarmonicsDE.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -14,8 +16,8 @@
       <file leaf-file-name="SphericalHarmonicsDE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SphericalHarmonicsDE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4114">
-              <caret line="434" column="8" selection-start-line="434" selection-start-column="8" selection-end-line="434" selection-end-column="8" />
+            <state relative-caret-position="1076">
+              <caret line="589" column="55" lean-forward="true" selection-start-line="589" selection-start-column="55" selection-end-line="589" selection-end-column="55" />
               <folding>
                 <element signature="e#237#255#0" expanded="true" />
               </folding>
@@ -67,9 +69,10 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="7">
-    <option name="x" value="296" />
-    <option name="width" value="697" />
+  <component name="ProjectFrameBounds" extendedState="1">
+    <option name="x" value="424" />
+    <option name="y" value="39" />
+    <option name="width" value="847" />
     <option name="height" value="735" />
   </component>
   <component name="ProjectView">
@@ -230,15 +233,15 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1382" height="744" extended-state="7" />
+    <frame x="424" y="39" width="847" height="735" extended-state="1" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.11383928" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.08776267" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.26072606" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.35313532" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.35845897" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.3581818" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -444,8 +447,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SphericalHarmonicsDE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4114">
-          <caret line="434" column="8" selection-start-line="434" selection-start-column="8" selection-end-line="434" selection-end-column="8" />
+        <state relative-caret-position="1076">
+          <caret line="589" column="55" lean-forward="true" selection-start-line="589" selection-start-column="55" selection-end-line="589" selection-end-column="55" />
           <folding>
             <element signature="e#237#255#0" expanded="true" />
           </folding>
