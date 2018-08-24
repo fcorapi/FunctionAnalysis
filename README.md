@@ -12,7 +12,7 @@ the code. Also, this can only be done on a round 2-sphere, until conformally sph
 
 Scalar Fields:
 To represent scalar fields as a series of spherical harmonics, comment out lines 531 - 717 (sections entitled "Representing
-Desired Vector Function" and "Solving Poisson's Equation") , and uncomment lines 450 -526 (Section "Representin Desired
+Desired Vector Function" and "Solving Poisson's Equation") , and uncomment lines 450 -526 (Section "Representing Desired
 Function"). The value for Nval on line 437 is equal to the l-value of the spherical harmonic series you want it to go up to. 
 This can be modified depending on how long you want the series to be. To change which function you want to be represented, 
 modify the function "DesiredFunction" on line 28, to a function of theta and phi on the sphere. 
