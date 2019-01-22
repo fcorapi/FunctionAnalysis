@@ -237,17 +237,60 @@ def psi4(z,phi):
     factor = 1# - z**2
     return factor
 
+#*****OLD METHOD - Finite Differences*******
+# #Partial Phi derivative of a spherical harmonic
+# def phiDerivSH(M, N, phi, theta):
+#     eps = 1e-5
+#     deriv = (sph_harm(M, N, phi + 0.5*eps, theta) - sph_harm(M, N, phi - 0.5*eps, theta))/eps
+#     return deriv
+
 #Partial Phi derivative of a spherical harmonic
 def phiDerivSH(M, N, phi, theta):
-    eps = 1e-5
-    deriv = (sph_harm(M, N, phi + 0.5*eps, theta) - sph_harm(M, N, phi - 0.5*eps, theta))/eps
+    deriv = (1j*M)*sph_harm(M, N, phi, theta)
     return deriv
+
+#Second Partial Phi derivative of a spherical harmonic
+def phiSecondDerivSH(M, N, phi, theta):
+    deriv = (-1)*(M**2)*sph_harm(M, N, phi, theta)
+    return deriv
+
+#*****OLD METHOD - Finite Differences*******
+# #Partial Theta derivative of a spherical harmonic
+# def thetaDerivSH(M, N, phi, theta):
+#     eps = 1e-5
+#     deriv = (sph_harm(M, N, phi, theta + 0.5*eps) - sph_harm(M, N, phi, theta - 0.5*eps))/eps
+#     return deriv
 
 #Partial Theta derivative of a spherical harmonic
 def thetaDerivSH(M, N, phi, theta):
-    eps = 1e-5
-    deriv = (sph_harm(M, N, phi, theta + 0.5*eps) - sph_harm(M, N, phi, theta - 0.5*eps))/eps
+    if M == N:
+        deriv = M*(np.cos(theta)/np.sin(theta))*sph_harm(M, N, phi, theta)
+    else:
+        deriv = M * (np.cos(theta) / np.sin(theta)) * sph_harm(M, N, phi, theta) + np.sqrt(
+            (N - M) * (N + M + 1)) * np.exp(-1j * phi) * sph_harm(M+1, N, phi, theta)
     return deriv
+
+#Partial Theta derivative of a spherical harmonic
+def thetaSecondDerivSH(M, N, phi, theta):
+    if M == N:
+        deriv = M*(np.cos(theta)/np.sin(theta))*sph_harm(M, N, phi, theta)
+    elif M == N-1:
+        deriv = M*(M*((np.cos(theta) / np.sin(theta))**2) - ((1/np.sin(theta))**2)) * sph_harm(M, N, phi, theta) \
+                + np.sqrt((N-M)*(N+M+1))*(2*M + 1)*np.exp(-1j*phi)*(np.cos(theta) / np.sin(theta)) * sph_harm(M+1, N, phi, theta)
+    else:
+        deriv = M * (M * ((np.cos(theta) / np.sin(theta)) ** 2) - ((1 / np.sin(theta)) ** 2)) * sph_harm(M, N, phi, theta) \
+                + np.sqrt((N-M)*(N+M+1))*(2*M + 1)*np.exp(-1j*phi)*(np.cos(theta) / np.sin(theta)) * sph_harm(M+1, N, phi, theta) \
+                + np.sqrt((N-M)*(N-M-1)*(M+N+2)*(M+N+1))*np.exp(-2j*phi)*sph_harm(M+2, N, phi, theta)
+    return deriv
+
+#Partial Theta derivative of a spherical harmonic
+def thetaPhiDerivSH(M, N, phi, theta):
+    if M == N:
+        deriv = M*(np.cos(theta)/np.sin(theta))*sph_harm(M, N, phi, theta)
+    else:
+        deriv = M * (np.cos(theta) / np.sin(theta)) * sph_harm(M, N, phi, theta) + np.sqrt(
+            (N - M) * (N + M + 1)) * np.exp(-1j * phi) * sph_harm(M+1, N, phi, theta)
+    return (1j*M)*deriv
 
 def VecDesiredFunction(theta,phi,kind):
     A = 2 * np.sqrt((np.pi) / 3)
