@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="09d3bd09-5e88-4a8d-ae46-5a10a4ff2713" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Presentation and Report/VectorFieldsPresentation.pptx" beforeDir="false" afterPath="$PROJECT_DIR$/Presentation and Report/VectorFieldsPresentation.pptx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/SphericalHarmonicsDE.py" beforeDir="false" afterPath="$PROJECT_DIR$/SphericalHarmonicsDE.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -18,8 +16,8 @@
       <file leaf-file-name="SphericalHarmonicsDE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SphericalHarmonicsDE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1496">
-              <caret line="286" column="38" lean-forward="true" selection-start-line="286" selection-start-column="38" selection-end-line="286" selection-end-column="38" />
+            <state relative-caret-position="276">
+              <caret line="537" lean-forward="true" selection-start-line="537" selection-end-line="537" />
               <folding>
                 <element signature="e#237#255#0" expanded="true" />
               </folding>
@@ -531,8 +529,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SphericalHarmonicsDE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1496">
-          <caret line="286" column="38" lean-forward="true" selection-start-line="286" selection-start-column="38" selection-end-line="286" selection-end-column="38" />
+        <state relative-caret-position="276">
+          <caret line="537" lean-forward="true" selection-start-line="537" selection-end-line="537" />
           <folding>
             <element signature="e#237#255#0" expanded="true" />
           </folding>

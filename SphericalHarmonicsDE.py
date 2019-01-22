@@ -419,7 +419,7 @@ def VecSHSeries(z, phi, N, coeff, kind):
             ntracker = (2*loopn + 1) + ntracker
     return series
 
-#Function to integrate over to find error in the Legendre Series
+#Function to integrate over to find error in the SH Series
 def L2VecErrorFunction(z, phi, N, coeff, fn, kind):
     # Define the spherical metric
     q_inv = np.zeros((2, 2))
@@ -444,6 +444,97 @@ def calcVecErrorList(coeff, Nval, fn, intTerms, kind):
         print "Error for N = ", maxN, " completed."
     return errList
 
+#*********************************************TENSOR SPHERICAL HARMONICS*************************************
+
+def tensorSH(M, N, phi, theta, kind):
+    tens = np.zeros([2, 2])
+    X_lm = 2*(thetaPhiDerivSH(M,N,phi,theta) - (np.cos(theta)/np.sin(theta))*phiDerivSH(M,N,phi,theta))
+    W_lm = thetaSecondDerivSH(M,N,phi,theta) - (np.cos(theta)/np.sin(theta))*thetaDerivSH(M,N,phi,theta) \
+           - ((1/np.sin(theta))**2)*phiSecondDerivSH(M,N,phi,theta)
+    if kind == 'polar':
+        tens[0,0] = 0.5*W_lm
+        tens[0,1] = 0.5*X_lm
+        tens[1,0] = 0.5*X_lm
+        tens[1,1] = -0.5*(np.sin(theta)**2)*W_lm
+    elif kind == 'axial':
+        tens[0,0] = (0.5/np.sin(theta))*X_lm
+        tens[0,1] = -0.5*np.sin(theta)*W_lm
+        tens[1,0] = -0.5*np.sin(theta)*W_lm
+        tens[1,1] = -0.5*np.sin(theta)*X_lm
+    return tens
+
+def tensIntegrand(z, phi, n, m ,fn, kind):
+    #Define the spherical metric
+    q_inv = np.zeros((2, 2))
+    q_inv[0, 0] = 1
+    q_inv[1, 1] = 1/(np.sin(np.arccos(z))**2)
+
+    #Inner product involving the spherical metric
+    value = 0
+    for loop1 in range(0,2):
+        for loop2 in range(0,2):
+            for loop3 in range(0,2):
+                for loop4 in range(0,2):
+                    value = value + q_inv[loop1, loop3]*q_inv[loop2, loop4]*np.conj(tensorSH(m, n, phi, np.arccos(z), kind))[loop1,loop2]*fn(np.arccos(z), phi, kind)[loop3,loop4]
+    #value = np.dot(np.conj(vectorSH(m, n, phi, np.arccos(z), kind)), fn(np.arccos(z), phi, kind))
+    return value
+
+def findTensCoeff(Nval, fn, intTerms, kind):
+    coeffList = []
+    # Integrate to determine Legendre series coefficients
+    for n in range(0, Nval):
+        for m in range(-n, n+1):
+            integralValue = GL_Quad_2D(tensIntegrand, -1.0, 1.0, 0, 2*np.pi, intTerms, 1, args=(n, m, fn, kind,))
+            if n == 0:
+                cval = integralValue
+            else:
+                cval = integralValue / (n * (n + 1))
+            coeffList.append(cval)
+    return coeffList
+
+#TensSHSeries
+def TensSHSeries(z, phi, N, coeff, kind):
+    series = np.zeros(np.shape(tensorSH(0,0,phi,np.arccos(z), kind)))
+    ntracker = 0
+
+    if N > len(coeff):
+        print "Error"
+        return 0
+    else:
+        for loopn in range(0, N):
+            mtracker = 0
+            for loopm in range(-loopn, loopn+1):
+                series = series + np.multiply((coeff[mtracker + ntracker]), tensorSH(loopm, loopn, phi, np.arccos(z), kind))
+                mtracker = mtracker + 1
+            ntracker = (2*loopn + 1) + ntracker
+    return series
+
+#Function to integrate over to find error in the SH Series
+def L2TensErrorFunction(z, phi, N, coeff, fn, kind):
+    # Define the spherical metric
+    q_inv = np.zeros((2, 2))
+    q_inv[0, 0] = 1
+    q_inv[1, 1] = 1 / (np.sin(np.arccos(z))**2)
+
+    diff = TensSHSeries(z, phi, N, coeff, kind) - fn(np.arccos(z), phi, kind)
+    errVal = 0
+
+    for loop1 in range(0,2):
+        for loop2 in range(0,2):
+            for loop3 in range(0,2):
+                for loop4 in range(0,2):
+                    errVal = errVal + (1/psi4(z,phi))*(1/psi4(z,phi))*q_inv[loop1, loop3]*q_inv[loop2, loop4]*np.conj(diff)[loop1,loop2]*diff[loop3,loop4]
+    #errVal = abs(np.dot(np.conj(VecSHSeries(z, phi, N, coeff, kind) - fn(np.arccos(z), phi, kind)), VecSHSeries(z, phi, N, coeff, kind) - fn(np.arccos(z), phi, kind)))
+    return abs(errVal)
+
+#Loops over every N value up to a maximum, and calculates the L2 error.
+def calcTensErrorList(coeff, Nval, fn, intTerms, kind):
+    errList = []
+    for maxN in range(1, Nval + 1):
+        err = GL_Quad_2D(L2TensErrorFunction, -1.0, 1.0, 0, 2*np.pi, intTerms, 0, args=(maxN, coeff, fn, kind,))
+        errList.append(np.sqrt(err))
+        print "Error for N = ", maxN, " completed."
+    return errList
 
 #******************Functions needed to calculate angular momentum integrals************************
 
