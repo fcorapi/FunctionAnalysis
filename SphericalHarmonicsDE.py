@@ -474,8 +474,11 @@ def TensDesiredFunction(theta,phi,kind):
         val[1,0] = 0+0j
         val[1,1] = -3*A*(np.sin(theta)**4)
     elif kind == 'axial':
-        A = -0.5 * np.sqrt(3/(2 * np.pi))
-        val = np.zeros([2,2],dtype=np.complex_)
+        val = np.zeros([2, 2], dtype=np.complex_)
+        val[0, 0] = 0 + 0j
+        val[0, 1] = -3 * A * (np.sin(theta) ** 3)
+        val[1, 0] = -3 * A * (np.sin(theta) ** 3)
+        val[1, 1] = 0 + 0j
     return val
 
 def tensIntegrand(z, phi, n, m ,fn, kind):
@@ -789,7 +792,7 @@ c = 1 #Speed of light
 
 #***********Representing Desired Tensor Field*****************
 t = time.time()
-tensKind = 'polar' #The Kind has to be 'polar' or 'axial'
+tensKind = 'axial' #The Kind has to be 'polar' or 'axial'
 
 print "Finding coefficients..."
 C_n = findTensCoeff(Nval, TensDesiredFunction, intN, tensKind) #Coefficients of Desired Function
