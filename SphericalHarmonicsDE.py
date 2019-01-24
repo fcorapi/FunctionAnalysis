@@ -811,10 +811,10 @@ error = errorList[len(errorList)-1]
 # derivError = derivErrorList[len(derivErrorList)-1]
 print "Errors Calculated!"
 
-print "Determining Series..."
+#print "Determining Series..."
 # seriesResult = TensSHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_n, tensKind)
 # print np.imag(seriesResult)
-print "Series determined, plotting results..."
+#print "Series determined, plotting results..."
 # derivSeriesResult = SHSeries(thetaVals, phiVals, Nval, Cprime_n)
 
 #Print Results
