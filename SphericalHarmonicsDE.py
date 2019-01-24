@@ -7,7 +7,7 @@
 #Import Directories
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.special import legendre, sph_harm
+from scipy.special import legendre, sph_harm, roots_legendre
 from scipy.integrate import quad
 from numpy.polynomial.legendre import legroots
 from pylab import imshow
@@ -181,9 +181,10 @@ def GL_Quad(integrand, lowerBound, upperBound, N, args):
         return w
 
     #Create list of roots for P_N
-    rootIndex = np.zeros(N+1)
-    rootIndex[N] = 1
-    roots = legroots(rootIndex)
+    # rootIndex = np.zeros(N+1)
+    # rootIndex[N] = 1
+    # roots = legroots(rootIndex)
+    roots = roots_legendre(N)[0]
 
     value = 0
     for x_i in roots:
@@ -207,9 +208,10 @@ def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, round, args):
         return w
 
     #Create list of roots for P_N
-    rootIndex = np.zeros(N+1)
-    rootIndex[N] = 1
-    roots = legroots(rootIndex)
+    # rootIndex = np.zeros(N+1)
+    # rootIndex[N] = 1
+    # roots = legroots(rootIndex)
+    roots = roots_legendre(N)[0]
 
     #Equally spaced points for trapzeoidal integration method for phi
     Npoints = 100
@@ -447,7 +449,7 @@ def calcVecErrorList(coeff, Nval, fn, intTerms, kind):
 #*********************************************TENSOR SPHERICAL HARMONICS*************************************
 
 def tensorSH(M, N, phi, theta, kind):
-    tens = np.zeros([2, 2])
+    tens = np.zeros([2, 2], dtype=np.complex_)
     X_lm = 2*(thetaPhiDerivSH(M,N,phi,theta) - (np.cos(theta)/np.sin(theta))*phiDerivSH(M,N,phi,theta))
     W_lm = thetaSecondDerivSH(M,N,phi,theta) - (np.cos(theta)/np.sin(theta))*thetaDerivSH(M,N,phi,theta) \
            - ((1/np.sin(theta))**2)*phiSecondDerivSH(M,N,phi,theta)
@@ -462,6 +464,19 @@ def tensorSH(M, N, phi, theta, kind):
         tens[1,0] = -0.5*np.sin(theta)*W_lm
         tens[1,1] = -0.5*np.sin(theta)*X_lm
     return tens
+
+def TensDesiredFunction(theta,phi,kind):
+    A = 0.25 * np.sqrt(5/(np.pi))
+    if kind == 'polar':
+        val = np.zeros([2,2],dtype=np.complex_)
+        val[0,0] = 3*A*(np.sin(theta)**2)
+        val[0,1] = 0+0j
+        val[1,0] = 0+0j
+        val[1,1] = -3*A*(np.sin(theta)**4)
+    elif kind == 'axial':
+        A = -0.5 * np.sqrt(3/(2 * np.pi))
+        val = np.zeros([2,2],dtype=np.complex_)
+    return val
 
 def tensIntegrand(z, phi, n, m ,fn, kind):
     #Define the spherical metric
@@ -487,14 +502,16 @@ def findTensCoeff(Nval, fn, intTerms, kind):
             integralValue = GL_Quad_2D(tensIntegrand, -1.0, 1.0, 0, 2*np.pi, intTerms, 1, args=(n, m, fn, kind,))
             if n == 0:
                 cval = integralValue
+            elif n ==1:
+                cval = integralValue
             else:
-                cval = integralValue / (n * (n + 1))
+                cval = integralValue / (0.5*(n-1)*n*(n+1)*(n+2))
             coeffList.append(cval)
     return coeffList
 
 #TensSHSeries
 def TensSHSeries(z, phi, N, coeff, kind):
-    series = np.zeros(np.shape(tensorSH(0,0,phi,np.arccos(z), kind)))
+    series = np.zeros(np.shape(tensorSH(0,0,phi,np.arccos(z), kind)),dtype=np.complex_)
     ntracker = 0
 
     if N > len(coeff):
@@ -568,7 +585,7 @@ def calculateJK(w, vecFn, N, intTerms, wcoeff, wKind, fnKind):
     return integralValue
 #*******************************END OF FUNCTIONS*************************************
 
-Nval = 2 #Number of coefficients
+Nval = 4 #Number of coefficients
 intN = 2*Nval #Number of terms in Gauss-Legendre integration
 thetaVals = np.linspace(0, np.pi, 100) + 1e-5#Theta-Values
 phiVals = np.linspace(0, 2*np.pi, 100) + 1e-5 #Phi-Values
@@ -662,11 +679,120 @@ c = 1 #Speed of light
 #*****************************************************************************************
 
 #***********Representing Desired Vector Function*****************
+# t = time.time()
+# vecKind = 'axial' #The Kind has to be 'polar' or 'axial'
+#
+# print "Finding coefficients..."
+# C_n = findVecCoeff(Nval, VecDesiredFunction, intN, vecKind) #Coefficients of Desired Function
+# print "Coefficients Found!"
+# # Cprime_n = calcDeriv(2, C_n) #Coefficients of the derivative of the function
+#
+# checkCoeff = []
+# for check in range(len(C_n)):
+#     if abs(C_n[check]) > 1e-6:
+#         checkCoeff.append(1)
+#     else:
+#         checkCoeff.append(0)
+#
+# #List L2 error for each N-value.
+# print "Calculating Error List..."
+# errorList = calcVecErrorList(C_n, Nval, VecDesiredFunction, intN, vecKind)
+# # derivErrorList = calcErrorList(Cprime_n, Nval, DerivFunction, intN)
+# error = errorList[len(errorList)-1]
+# # derivError = derivErrorList[len(derivErrorList)-1]
+# print "Errors Calculated!"
+#
+# print "Determining Series..."
+# seriesResult = VecSHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_n, vecKind)
+# print np.imag(seriesResult)
+# print "Series determined, plotting results..."
+# # derivSeriesResult = SHSeries(thetaVals, phiVals, Nval, Cprime_n)
+#
+# #Print Results
+# print "Spherical Harmonics Series Coefficients:", C_n
+# print "Checking Values of Coeffecients:", checkCoeff
+# print "Error:", error
+# # print "Derivative Legendre Series Coefficients", Cprime_n
+# # print "Derivative Error:", derivError
+#
+#
+# #Calculating the J and K values from the Korzynski paper.
+# J1 = (-1/(8*np.pi*G))*calculateJK(omega, Phi1, Nval, intN, C_n, vecKind, 'axial')
+# J2 = (-1/(8*np.pi*G))*calculateJK(omega, Phi2, Nval, intN, C_n, vecKind, 'axial')
+# J3 = (-1/(8*np.pi*G))*calculateJK(omega, Phi3, Nval, intN, C_n, vecKind, 'axial')
+# K1 = (-1/(8*np.pi*G))*calculateJK(omega, Xi1, Nval, intN, C_n, vecKind, 'polar')
+# K2 = (-1/(8*np.pi*G))*calculateJK(omega, Xi2, Nval, intN, C_n, vecKind, 'polar')
+# K3 = (-1/(8*np.pi*G))*calculateJK(omega, Xi3, Nval, intN, C_n, vecKind, 'polar')
+#
+# #Calculate the values of the invariants A and B from the  Korzynski paper
+# invariantA = (J1*J1 + J2*J2 + J3*J3) - (K1*K1 + K2*K2 + K3*K3)
+# invariantB = K1*J1 + K2*J2 + K3*J3
+#
+# #Final value for the Angular Momentum
+# J = np.sqrt((invariantA + np.sqrt(invariantA**2 + 4*(invariantB**2)))/2)
+#
+# #Calculate properties of the sphere
+# area = GL_Quad_2D(oneFunction, -1, 1, 0, 2*np.pi, intN, 0, args=())
+# arealRadius = np.sqrt(area/(4*np.pi))
+# irrMass = arealRadius/2
+# mass = np.sqrt(irrMass**2 + J**2/(4*(irrMass**2)))
+# spin = J/(mass**2)
+#
+# #Printing the results of the calculated J and K values.
+# print "The omega one-form is equal to the co-vector phi_3."
+# print "J_1 = ", J1
+# print "J_2 = ", J2
+# print "J_3 = ", J3
+# print "K_1 = ", K1
+# print "K_2 = ", K2
+# print "K_3 = ", K3
+#
+# print "A = ", invariantA
+# print "B = ", invariantB
+# print "J = ", J
+#
+# print "Properties of the Surface:"
+# print "Area: ", area
+# print "Areal Radius: ", arealRadius
+# print "Irreducible Mass: ", irrMass
+# print "Mass: ", mass
+# print "Spin (a): ", spin
+#
+# elapsedTime = time.time() - t
+# print "Elapsed Time (s):", elapsedTime
+#
+# #Scatter plot the L2 error versus N
+# plt.figure()
+# plt.scatter(coeffNum, np.log10(errorList))
+# #plt.yscale('log')
+# plt.xlabel('N-Value')
+# plt.ylabel('Log_10 of L2 Error')
+# plt.grid()
+# plt.title('L2 Error for Different N-Values $(\\phi_3)$')
+# plt.show()
+#
+# #Plotting the vector fields using quiver
+# plt.figure()
+# plt.quiver(phi_mesh[::4,::4], theta_mesh[::4,::4], seriesResult[1,::4,::4], -seriesResult[0,::4,::4])
+# plt.xlabel('$\\phi$-Values')
+# plt.ylabel('$\\theta$-Values')
+# plt.gca().invert_yaxis()
+# plt.title('Vector Spherical Harmonics Series Plot $(\\phi_3)$')
+# plt.figure()
+# plt.quiver(phi_mesh[::4,::4], theta_mesh[::4,::4], VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[1][::4,::4],
+#            -VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[0][::4,::4], color = 'r')
+# plt.xlabel('$\\phi$-Values')
+# plt.ylabel('$\\theta$-Values')
+# plt.gca().invert_yaxis()
+# plt.title('Vector Desired Function Plot $(\\phi_3)$')
+# plt.show()
+
+#***********Representing Desired Tensor Field*****************
 t = time.time()
-vecKind = 'axial' #The Kind has to be 'polar' or 'axial'
+tensKind = 'polar' #The Kind has to be 'polar' or 'axial'
 
 print "Finding coefficients..."
-C_n = findVecCoeff(Nval, VecDesiredFunction, intN, vecKind) #Coefficients of Desired Function
+C_n = findTensCoeff(Nval, TensDesiredFunction, intN, tensKind) #Coefficients of Desired Function
 print "Coefficients Found!"
 # Cprime_n = calcDeriv(2, C_n) #Coefficients of the derivative of the function
 
@@ -679,15 +805,15 @@ for check in range(len(C_n)):
 
 #List L2 error for each N-value.
 print "Calculating Error List..."
-errorList = calcVecErrorList(C_n, Nval, VecDesiredFunction, intN, vecKind)
+errorList = calcTensErrorList(C_n, Nval, TensDesiredFunction, intN, tensKind)
 # derivErrorList = calcErrorList(Cprime_n, Nval, DerivFunction, intN)
 error = errorList[len(errorList)-1]
 # derivError = derivErrorList[len(derivErrorList)-1]
 print "Errors Calculated!"
 
 print "Determining Series..."
-seriesResult = VecSHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_n, vecKind)
-print np.imag(seriesResult)
+# seriesResult = TensSHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_n, tensKind)
+# print np.imag(seriesResult)
 print "Series determined, plotting results..."
 # derivSeriesResult = SHSeries(thetaVals, phiVals, Nval, Cprime_n)
 
@@ -695,81 +821,9 @@ print "Series determined, plotting results..."
 print "Spherical Harmonics Series Coefficients:", C_n
 print "Checking Values of Coeffecients:", checkCoeff
 print "Error:", error
-# print "Derivative Legendre Series Coefficients", Cprime_n
-# print "Derivative Error:", derivError
-
-
-#Calculating the J and K values from the Korzynski paper.
-J1 = (-1/(8*np.pi*G))*calculateJK(omega, Phi1, Nval, intN, C_n, vecKind, 'axial')
-J2 = (-1/(8*np.pi*G))*calculateJK(omega, Phi2, Nval, intN, C_n, vecKind, 'axial')
-J3 = (-1/(8*np.pi*G))*calculateJK(omega, Phi3, Nval, intN, C_n, vecKind, 'axial')
-K1 = (-1/(8*np.pi*G))*calculateJK(omega, Xi1, Nval, intN, C_n, vecKind, 'polar')
-K2 = (-1/(8*np.pi*G))*calculateJK(omega, Xi2, Nval, intN, C_n, vecKind, 'polar')
-K3 = (-1/(8*np.pi*G))*calculateJK(omega, Xi3, Nval, intN, C_n, vecKind, 'polar')
-
-#Calculate the values of the invariants A and B from the  Korzynski paper
-invariantA = (J1*J1 + J2*J2 + J3*J3) - (K1*K1 + K2*K2 + K3*K3)
-invariantB = K1*J1 + K2*J2 + K3*J3
-
-#Final value for the Angular Momentum
-J = np.sqrt((invariantA + np.sqrt(invariantA**2 + 4*(invariantB**2)))/2)
-
-#Calculate properties of the sphere
-area = GL_Quad_2D(oneFunction, -1, 1, 0, 2*np.pi, intN, 0, args=())
-arealRadius = np.sqrt(area/(4*np.pi))
-irrMass = arealRadius/2
-mass = np.sqrt(irrMass**2 + J**2/(4*(irrMass**2)))
-spin = J/(mass**2)
-
-#Printing the results of the calculated J and K values.
-print "The omega one-form is equal to the co-vector phi_3."
-print "J_1 = ", J1
-print "J_2 = ", J2
-print "J_3 = ", J3
-print "K_1 = ", K1
-print "K_2 = ", K2
-print "K_3 = ", K3
-
-print "A = ", invariantA
-print "B = ", invariantB
-print "J = ", J
-
-print "Properties of the Surface:"
-print "Area: ", area
-print "Areal Radius: ", arealRadius
-print "Irreducible Mass: ", irrMass
-print "Mass: ", mass
-print "Spin (a): ", spin
 
 elapsedTime = time.time() - t
 print "Elapsed Time (s):", elapsedTime
-
-#Scatter plot the L2 error versus N
-plt.figure()
-plt.scatter(coeffNum, np.log10(errorList))
-#plt.yscale('log')
-plt.xlabel('N-Value')
-plt.ylabel('Log_10 of L2 Error')
-plt.grid()
-plt.title('L2 Error for Different N-Values $(\\phi_3)$')
-plt.show()
-
-#Plotting the vector fields using quiver
-plt.figure()
-plt.quiver(phi_mesh[::4,::4], theta_mesh[::4,::4], seriesResult[1,::4,::4], -seriesResult[0,::4,::4])
-plt.xlabel('$\\phi$-Values')
-plt.ylabel('$\\theta$-Values')
-plt.gca().invert_yaxis()
-plt.title('Vector Spherical Harmonics Series Plot $(\\phi_3)$')
-plt.figure()
-plt.quiver(phi_mesh[::4,::4], theta_mesh[::4,::4], VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[1][::4,::4],
-           -VecDesiredFunction(theta_mesh, phi_mesh, vecKind)[0][::4,::4], color = 'r')
-plt.xlabel('$\\phi$-Values')
-plt.ylabel('$\\theta$-Values')
-plt.gca().invert_yaxis()
-plt.title('Vector Desired Function Plot $(\\phi_3)$')
-plt.show()
-
 
 #***************Solving Poissons Equation***************
 # t = time.time()
