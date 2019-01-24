@@ -16,8 +16,8 @@
       <file leaf-file-name="SphericalHarmonicsDE.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SphericalHarmonicsDE.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="5628">
-              <caret line="795" lean-forward="true" selection-start-line="795" selection-end-line="795" />
+            <state relative-caret-position="276">
+              <caret line="841" lean-forward="true" selection-start-line="841" selection-end-line="841" />
               <folding>
                 <element signature="e#237#255#0" expanded="true" />
               </folding>
@@ -69,7 +69,7 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
+  <component name="ProjectFrameBounds" extendedState="7">
     <option name="x" value="277" />
     <option name="y" value="18" />
     <option name="width" value="847" />
@@ -569,8 +569,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SphericalHarmonicsDE.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5628">
-          <caret line="795" lean-forward="true" selection-start-line="795" selection-end-line="795" />
+        <state relative-caret-position="276">
+          <caret line="841" lean-forward="true" selection-start-line="841" selection-end-line="841" />
           <folding>
             <element signature="e#237#255#0" expanded="true" />
           </folding>

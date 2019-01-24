@@ -826,7 +826,19 @@ print "Checking Values of Coeffecients:", checkCoeff
 print "Error:", error
 
 elapsedTime = time.time() - t
+print "DONE!"
 print "Elapsed Time (s):", elapsedTime
+
+# #Scatter plot the L2 error versus N
+print "Plotting error..."
+plt.figure()
+plt.scatter(coeffNum, np.log10(errorList))
+#plt.yscale('log')
+plt.xlabel('N-Value')
+plt.ylabel('Log_10 of L2 Error')
+plt.grid()
+plt.title('L2 Error for Different N-Values $(\\phi_3)$')
+plt.show()
 
 #***************Solving Poissons Equation***************
 # t = time.time()
