@@ -214,7 +214,7 @@ def GL_Quad_2D(integrand, lowZ, upZ, lowPhi, upPhi, N, round, args):
     roots = roots_legendre(N)[0]
 
     #Equally spaced points for trapzeoidal integration method for phi
-    Npoints = 100
+    Npoints = 30
     deltaPhi = (upPhi-lowPhi)/Npoints
     phiVals = np.linspace(lowPhi, upPhi-deltaPhi, Npoints)
 
@@ -453,11 +453,21 @@ def tensorSH(M, N, phi, theta, kind):
     X_lm = 2*(thetaPhiDerivSH(M,N,phi,theta) - (np.cos(theta)/np.sin(theta))*phiDerivSH(M,N,phi,theta))
     W_lm = thetaSecondDerivSH(M,N,phi,theta) - (np.cos(theta)/np.sin(theta))*thetaDerivSH(M,N,phi,theta) \
            - ((1/np.sin(theta))**2)*phiSecondDerivSH(M,N,phi,theta)
-    if kind == 'polar':
+    if kind == 'metric':
+        tens[0,0] = sph_harm(M, N, phi, theta)
+        tens[0,1] = 0+0j
+        tens[1,0] = 0+0j
+        tens[1,1] = (np.sin(theta)**2)*sph_harm(M, N, phi, theta)
+    elif kind == 'polar':
         tens[0,0] = 0.5*W_lm
         tens[0,1] = 0.5*X_lm
         tens[1,0] = 0.5*X_lm
         tens[1,1] = -0.5*(np.sin(theta)**2)*W_lm
+    elif kind == 'levi':
+        tens[0,0] = 0+0j
+        tens[0,1] = np.sin(theta)*sph_harm(M, N, phi, theta)
+        tens[1,0] = -np.sin(theta)*sph_harm(M, N, phi, theta)
+        tens[1,1] = 0+0j
     elif kind == 'axial':
         tens[0,0] = (0.5/np.sin(theta))*X_lm
         tens[0,1] = -0.5*np.sin(theta)*W_lm
@@ -467,6 +477,7 @@ def tensorSH(M, N, phi, theta, kind):
 
 def TensDesiredFunction(theta,phi,kind):
     A = 0.25 * np.sqrt(5/(np.pi))
+    B = 1/np.sqrt(4*np.pi)
     if kind == 'polar':
         val = np.zeros([2,2],dtype=np.complex_)
         val[0,0] = 3*A*(np.sin(theta)**2)
@@ -478,6 +489,18 @@ def TensDesiredFunction(theta,phi,kind):
         val[0, 0] = 0 + 0j
         val[0, 1] = -3 * A * (np.sin(theta) ** 3)
         val[1, 0] = -3 * A * (np.sin(theta) ** 3)
+        val[1, 1] = 0 + 0j
+    elif kind == 'metric':
+        val = np.zeros([2, 2], dtype=np.complex_)
+        val[0, 0] = sph_harm(2, 3, phi, theta) + sph_harm(-1, 1, phi, theta) + sph_harm(-1, 2, phi, theta)
+        val[0, 1] = 0+0j
+        val[1, 0] = 0+0j
+        val[1, 1] = (sph_harm(2, 3, phi, theta) + sph_harm(-1, 1, phi, theta) + sph_harm(-1, 2, phi, theta))*np.sin(theta)**2
+    elif kind == 'levi':
+        val = np.zeros([2, 2], dtype=np.complex_)
+        val[0, 0] = 0 + 0j
+        val[0, 1] = (sph_harm(2, 3, phi, theta) + sph_harm(-1, 1, phi, theta) + sph_harm(-1, 2, phi, theta))*np.sin(theta)
+        val[1, 0] = -(sph_harm(2, 3, phi, theta) + sph_harm(-1, 1, phi, theta) + sph_harm(-1, 2, phi, theta))*np.sin(theta)
         val[1, 1] = 0 + 0j
     return val
 
@@ -503,12 +526,17 @@ def findTensCoeff(Nval, fn, intTerms, kind):
     for n in range(0, Nval):
         for m in range(-n, n+1):
             integralValue = GL_Quad_2D(tensIntegrand, -1.0, 1.0, 0, 2*np.pi, intTerms, 1, args=(n, m, fn, kind,))
-            if n == 0:
-                cval = integralValue
-            elif n ==1:
-                cval = integralValue
+            if kind == 'metric':
+                cval = integralValue/2.0
+            elif kind == 'levi':
+                cval = integralValue/2.0
             else:
-                cval = integralValue / (0.5*(n-1)*n*(n+1)*(n+2))
+                if n == 0:
+                    cval = integralValue
+                elif n ==1:
+                    cval = integralValue
+                else:
+                    cval = integralValue / (0.5*(n-1)*n*(n+1)*(n+2))
             coeffList.append(cval)
     return coeffList
 
@@ -792,7 +820,7 @@ c = 1 #Speed of light
 
 #***********Representing Desired Tensor Field*****************
 t = time.time()
-tensKind = 'axial' #The Kind has to be 'polar' or 'axial'
+tensKind = 'levi' #The Kind has to be 'polar', 'axial', 'metric, or 'levi'
 
 print "Finding coefficients..."
 C_n = findTensCoeff(Nval, TensDesiredFunction, intN, tensKind) #Coefficients of Desired Function
