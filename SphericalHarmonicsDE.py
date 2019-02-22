@@ -621,6 +621,9 @@ intN = 2*Nval #Number of terms in Gauss-Legendre integration
 thetaVals = np.linspace(0, np.pi, 100) + 1e-5#Theta-Values
 phiVals = np.linspace(0, 2*np.pi, 100) + 1e-5 #Phi-Values
 theta_mesh, phi_mesh = np.meshgrid(thetaVals, phiVals) #Make a mesh grid
+X_mesh = np.sin(theta_mesh)*np.cos(phi_mesh)
+Y_mesh = np.sin(theta_mesh)*np.sin(phi_mesh)
+Z_mesh = np.cos(theta_mesh)
 coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
 G = 1 #Graviational constant
 c = 1 #Speed of light
@@ -958,18 +961,18 @@ def projOperator(theta, phi):
     proj = np.zeros((3,3))
 
     proj[0,0] = 1 - (np.sin(theta)**2)*(np.cos(phi)**2)
-    proj[0,1] = (np.sin(theta)**2)*np.cos(phi)*np.sin(phi)
-    proj[0,2] = np.sin(theta)*np.cos(theta)*np.cos(phi)
-    proj[1,0] = (np.sin(theta)**2)*np.cos(phi)*np.sin(phi)
+    proj[0,1] = -(np.sin(theta)**2)*np.cos(phi)*np.sin(phi)
+    proj[0,2] = -np.sin(theta)*np.cos(theta)*np.cos(phi)
+    proj[1,0] = -(np.sin(theta)**2)*np.cos(phi)*np.sin(phi)
     proj[1,1] = 1 - (np.sin(theta)**2)*(np.sin(phi)**2)
-    proj[1,2] = np.sin(theta)*np.cos(theta)*np.sin(phi)
-    proj[2,0] = np.sin(theta)*np.cos(theta)*np.cos(phi)
-    proj[2,1] = np.sin(theta)*np.cos(theta)*np.sin(phi)
+    proj[1,2] = -np.sin(theta)*np.cos(theta)*np.sin(phi)
+    proj[2,0] = -np.sin(theta)*np.cos(theta)*np.cos(phi)
+    proj[2,1] = -np.sin(theta)*np.cos(theta)*np.sin(phi)
     proj[2,2] = 1 - np.cos(theta)**2
 
     return proj
 
-#Test Vector Field
+#Test Vector Field!
 def vecField(theta, phi):
     vec = [1,0,0]
     return vec
@@ -1064,7 +1067,8 @@ print "Determining Series..."
 seriesResultx = SHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_nx)
 seriesResulty = SHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_ny)
 seriesResultz = SHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_nz)
-print "Series determined, plotting results..."
+seriesResult = [seriesResultx, seriesResulty, seriesResultz]
+print "Series determined, printing results..."
 
 #Print Results
 print "Spherical Harmonics Series X Coefficients:", np.real(C_nx)
@@ -1076,6 +1080,20 @@ print "Checking Values of Z Coefficients:", checkCoeffz
 print "Error in X:", errorx
 print "Error in Y:", errory
 print "Error in Z:", errorz
+
+elapsedTime = time.time() - t
+print "Elapsed Time (s):", elapsedTime
+print "Plotting Results..."
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.quiver(X_mesh[::10,::10], Y_mesh[::10,::10] ,Z_mesh[::10,::10], np.real(seriesResultx)[::10,::10], np.real(seriesResulty)[::10,::10], np.real(seriesResultz)[::10,::10])
+ax.set_xlabel('X-axis')
+ax.set_ylabel('Y-axis')
+ax.set_zlabel('Z-axis')
+plt.show()
+
+print "DONE!"
 
 elapsedTime = time.time() - t
 print "Elapsed Time (s):", elapsedTime
