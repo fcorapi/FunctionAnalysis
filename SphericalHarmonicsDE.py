@@ -53,7 +53,7 @@ def rho(theta, phi):
             val = -l*(l+1)*sph_harm(m, l, phi, theta) + val
     return np.real(val)
 
-#Function to be integrated to determine Legendre coefficients
+#Function to be integrated to determine SH coefficients
 def integrand(z, phi, n, m, fn):
     value = np.conj(sph_harm(m, n, phi, np.arccos(z)))*fn(np.arccos(z), phi)
     return value
@@ -297,7 +297,7 @@ def thetaPhiDerivSH(M, N, phi, theta):
 def VecDesiredFunction(theta,phi,kind):
     A = 2 * np.sqrt((np.pi) / 3)
     if kind == 'polar':
-        val = [-A*thetaDerivSH(0, 1, phi, theta), -A*phiDerivSH(0, 1, phi, theta)]
+        val = [np.cos(theta), 0*theta]
     elif kind == 'axial':
         A = 2 * np.sqrt((2 * np.pi) / 3)
         val = np.add([0.5j * A * phiDerivSH(1, 1, phi, theta) / np.sin(theta),
@@ -711,7 +711,7 @@ c = 1 #Speed of light
 
 #***********Representing Desired Vector Function*****************
 # t = time.time()
-# vecKind = 'axial' #The Kind has to be 'polar' or 'axial'
+# vecKind = 'polar' #The Kind has to be 'polar' or 'axial'
 #
 # print "Finding coefficients..."
 # C_n = findVecCoeff(Nval, VecDesiredFunction, intN, vecKind) #Coefficients of Desired Function
@@ -818,55 +818,57 @@ c = 1 #Speed of light
 # plt.title('Vector Desired Function Plot $(\\phi_3)$')
 # plt.show()
 
+#*************************************************************************************************************
+
 #***********Representing Desired Tensor Field*****************
-t = time.time()
-tensKind = 'levi' #The Kind has to be 'polar', 'axial', 'metric, or 'levi'
-
-print "Finding coefficients..."
-C_n = findTensCoeff(Nval, TensDesiredFunction, intN, tensKind) #Coefficients of Desired Function
-print "Coefficients Found!"
-# Cprime_n = calcDeriv(2, C_n) #Coefficients of the derivative of the function
-
-checkCoeff = []
-for check in range(len(C_n)):
-    if abs(C_n[check]) > 1e-6:
-        checkCoeff.append(1)
-    else:
-        checkCoeff.append(0)
-
-#List L2 error for each N-value.
-print "Calculating Error List..."
-errorList = calcTensErrorList(C_n, Nval, TensDesiredFunction, intN, tensKind)
-# derivErrorList = calcErrorList(Cprime_n, Nval, DerivFunction, intN)
-error = errorList[len(errorList)-1]
-# derivError = derivErrorList[len(derivErrorList)-1]
-print "Errors Calculated!"
-
-#print "Determining Series..."
-# seriesResult = TensSHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_n, tensKind)
-# print np.imag(seriesResult)
-#print "Series determined, plotting results..."
-# derivSeriesResult = SHSeries(thetaVals, phiVals, Nval, Cprime_n)
-
-#Print Results
-print "Spherical Harmonics Series Coefficients:", C_n
-print "Checking Values of Coeffecients:", checkCoeff
-print "Error:", error
-
-elapsedTime = time.time() - t
-print "DONE!"
-print "Elapsed Time (s):", elapsedTime
-
-# #Scatter plot the L2 error versus N
-print "Plotting error..."
-plt.figure()
-plt.scatter(coeffNum, np.log10(errorList))
-#plt.yscale('log')
-plt.xlabel('N-Value')
-plt.ylabel('Log_10 of L2 Error')
-plt.grid()
-plt.title('L2 Error for Different N-Values $(\\phi_3)$')
-plt.show()
+# t = time.time()
+# tensKind = 'levi' #The Kind has to be 'polar', 'axial', 'metric, or 'levi'
+#
+# print "Finding coefficients..."
+# C_n = findTensCoeff(Nval, TensDesiredFunction, intN, tensKind) #Coefficients of Desired Function
+# print "Coefficients Found!"
+# # Cprime_n = calcDeriv(2, C_n) #Coefficients of the derivative of the function
+#
+# checkCoeff = []
+# for check in range(len(C_n)):
+#     if abs(C_n[check]) > 1e-6:
+#         checkCoeff.append(1)
+#     else:
+#         checkCoeff.append(0)
+#
+# #List L2 error for each N-value.
+# print "Calculating Error List..."
+# errorList = calcTensErrorList(C_n, Nval, TensDesiredFunction, intN, tensKind)
+# # derivErrorList = calcErrorList(Cprime_n, Nval, DerivFunction, intN)
+# error = errorList[len(errorList)-1]
+# # derivError = derivErrorList[len(derivErrorList)-1]
+# print "Errors Calculated!"
+#
+# #print "Determining Series..."
+# # seriesResult = TensSHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_n, tensKind)
+# # print np.imag(seriesResult)
+# #print "Series determined, plotting results..."
+# # derivSeriesResult = SHSeries(thetaVals, phiVals, Nval, Cprime_n)
+#
+# #Print Results
+# print "Spherical Harmonics Series Coefficients:", C_n
+# print "Checking Values of Coeffecients:", checkCoeff
+# print "Error:", error
+#
+# elapsedTime = time.time() - t
+# print "DONE!"
+# print "Elapsed Time (s):", elapsedTime
+#
+# # #Scatter plot the L2 error versus N
+# print "Plotting error..."
+# plt.figure()
+# plt.scatter(coeffNum, np.log10(errorList))
+# #plt.yscale('log')
+# plt.xlabel('N-Value')
+# plt.ylabel('Log_10 of L2 Error')
+# plt.grid()
+# plt.title('L2 Error for Different N-Values $(\\phi_3)$')
+# plt.show()
 
 #***************Solving Poissons Equation***************
 # t = time.time()
@@ -948,6 +950,157 @@ plt.show()
 # plt.show()
 
 #******************************************************************************
+
+
+#**************Representing Vectors Component-Wise Using Scalar SH Series*********************************
+#*********Functions**********************************
+def projOperator(theta, phi):
+    proj = np.zeros((3,3))
+
+    proj[0,0] = 1 - (np.sin(theta)**2)*(np.cos(phi)**2)
+    proj[0,1] = (np.sin(theta)**2)*np.cos(phi)*np.sin(phi)
+    proj[0,2] = np.sin(theta)*np.cos(theta)*np.cos(phi)
+    proj[1,0] = (np.sin(theta)**2)*np.cos(phi)*np.sin(phi)
+    proj[1,1] = 1 - (np.sin(theta)**2)*(np.sin(phi)**2)
+    proj[1,2] = np.sin(theta)*np.cos(theta)*np.sin(phi)
+    proj[2,0] = np.sin(theta)*np.cos(theta)*np.cos(phi)
+    proj[2,1] = np.sin(theta)*np.cos(theta)*np.sin(phi)
+    proj[2,2] = 1 - np.cos(theta)**2
+
+    return proj
+
+#Test Vector Field
+def vecField(theta, phi):
+    vec = [1,0,0]
+    return vec
+
+def vecProj(theta, phi, vector, comp):
+    newVec = np.zeros(len(vector(theta,phi)))
+
+    for loop1 in range(0,len(vector(theta,phi))):
+        for loop2 in range(0,len(vector(theta,phi))):
+            newVec[loop1] = projOperator(theta, phi)[loop1,loop2]*vector(theta,phi)[loop2] + newVec[loop1]
+    if comp == 0:
+        return newVec[0]
+    elif comp == 1:
+        return newVec[1]
+    elif comp == 2:
+        return newVec[2]
+
+def findCartCoeff(Nval, fn, intTerms, vec, comp):
+    coeffList = []
+    # Integrate to determine Legendre series coefficients
+    for n in range(0, Nval):
+        for m in range(-n, n+1):
+            integralValue = GL_Quad_2D(cartIntegrand, -1.0, 1.0, 0, 2*np.pi, intTerms, 1, args=(n, m, fn, vec, comp,))
+            cval = integralValue
+            coeffList.append(cval)
+    return coeffList
+
+def cartIntegrand(z, phi, n, m, fn, vec, comp):
+    value = np.conj(sph_harm(m, n, phi, np.arccos(z)))*fn(np.arccos(z), phi, vec, comp)
+    return value
+
+#Function to integrate over to find error in the Legendre Series
+def L2CartErrorFunction(z, phi, N, coeff, fn, vec, comp):
+    errVal = abs(SHSeries(z, phi, N, coeff) - fn(np.arccos(z), phi, vec, comp))**2
+    return errVal
+
+#Loops over every N value up to a maximum, and calculates the L2 error.
+def calcCartErrorList(coeff, Nval, fn, intTerms, vec, cart):
+    errList = []
+    for maxN in range(1, Nval + 1):
+        err = GL_Quad_2D(L2CartErrorFunction, -1.0, 1.0, 0, 2*np.pi, intTerms, 0, args=(maxN, coeff, fn, vec, cart,))
+        errList.append(np.sqrt(err))
+        print "Error for N = ", maxN, " completed."
+    return errList
+
+
+#************End of Functions**********************
+
+
+t = time.time()
+print "Finding coefficients..."
+C_nx = findCartCoeff(Nval, vecProj, intN, vecField, 0)
+C_ny = findCartCoeff(Nval, vecProj, intN, vecField, 1)
+C_nz = findCartCoeff(Nval, vecProj, intN, vecField, 2)
+print "Coefficients Found!"
+
+checkCoeffx = []
+for check in range(len(C_nx)):
+    if abs(C_nx[check]) > 1e-6:
+        checkCoeffx.append(1)
+    else:
+        checkCoeffx.append(0)
+checkCoeffy = []
+for check in range(len(C_ny)):
+    if abs(C_ny[check]) > 1e-6:
+        checkCoeffy.append(1)
+    else:
+        checkCoeffy.append(0)
+checkCoeffz = []
+for check in range(len(C_nz)):
+    if abs(C_nz[check]) > 1e-6:
+        checkCoeffz.append(1)
+    else:
+        checkCoeffz.append(0)
+
+#List L2 error for each N-value.
+print "Calculating Error List..."
+errorListx = calcCartErrorList(C_nx, Nval, vecProj, intN, vecField, 0)
+print "Error for X-Component Done!"
+errorListy = calcCartErrorList(C_ny, Nval, vecProj, intN, vecField, 1)
+print "Error for Y-Component Done!"
+errorListz = calcCartErrorList(C_nz, Nval, vecProj, intN, vecField, 2)
+print "Error for Z-Component Done!"
+
+errorx = errorListx[len(errorListx)-1]
+errory = errorListy[len(errorListy)-1]
+errorz = errorListz[len(errorListz)-1]
+# derivError = derivErrorList[len(derivErrorList)-1]
+print "Errors Calculated!"
+
+print "Determining Series..."
+seriesResultx = SHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_nx)
+seriesResulty = SHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_ny)
+seriesResultz = SHSeries(np.cos(theta_mesh), phi_mesh, Nval, C_nz)
+print "Series determined, plotting results..."
+
+#Print Results
+print "Spherical Harmonics Series X Coefficients:", np.real(C_nx)
+print "Spherical Harmonics Series Y Coefficients:", np.real(C_ny)
+print "Spherical Harmonics Series Z Coefficients:", np.real(C_nz)
+print "Checking Values of X Coefficients:", checkCoeffx
+print "Checking Values of Y Coefficients:", checkCoeffy
+print "Checking Values of Z Coefficients:", checkCoeffz
+print "Error in X:", errorx
+print "Error in Y:", errory
+print "Error in Z:", errorz
+
+elapsedTime = time.time() - t
+print "Elapsed Time (s):", elapsedTime
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # *******************UNUSED PLOTTING CODE*******************************
 # #Scatter plot the derivative L2 error versus N
