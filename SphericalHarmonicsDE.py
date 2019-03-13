@@ -1014,31 +1014,44 @@ def vecProj(theta, phi, vector, comp):
         return newVec[2]
 
 def metricProj(theta, phi, metric, comp):
-    newMetric = np.zeros(np.shape(metric(theta,phi)))
-
-    for loop1 in range(0, np.shape(metric(theta,phi))[0]):
-        for loop2 in range(0, np.shape(metric(theta, phi))[1]):
-            for loop3 in range(0, np.shape(metric(theta, phi))[0]):
-                for loop4 in range(0, np.shape(metric(theta, phi))[1]):
-                    newMetric[loop1,loop2] = projOperator(theta, phi)[loop1,loop3]*projOperator(theta, phi)[loop2,loop4]*metric(theta, phi)[loop3,loop4] + newMetric[loop1,loop2]
+    newMetricComp = 0
+    row = 0
+    col = 0
     if comp == 00:
-        return newMetric[0,0]
+        row = 0
+        col = 0
     elif comp == 01:
-        return newMetric[0,1]
+        row = 0
+        col = 1
     elif comp == 02:
-        return newMetric[0,2]
+        row = 0
+        col = 2
     elif comp == 10:
-        return newMetric[1,0]
+        row = 1
+        col = 0
     elif comp == 11:
-        return newMetric[1,1]
+        row = 1
+        col = 1
     elif comp == 12:
-        return newMetric[1,2]
+        row = 1
+        col = 2
     elif comp == 20:
-        return newMetric[2,0]
+        row = 2
+        col = 0
     elif comp == 21:
-        return newMetric[2,1]
+        row = 2
+        col = 1
     elif comp == 22:
-        return newMetric[2,2]
+        row = 2
+        col = 2
+
+    for loop3 in range(0, np.shape(metric(theta, phi))[0]):
+        for loop4 in range(0, np.shape(metric(theta, phi))[1]):
+            newMetricComp = (newMetricComp +
+                             projOperator(theta, phi)[row,loop3] *
+                             projOperator(theta, phi)[col,loop4] *
+                             metric(theta, phi)[loop3,loop4])
+    return newMetricComp
 
 def findCartCoeff(Nval, fn, intTerms, vec, comp):
     coeffList = []
@@ -1081,15 +1094,18 @@ C_nXY = findCartCoeff(Nval, metricProj, intN, metricField, 01)
 print 'XY Coefficients Found!'
 C_nXZ = findCartCoeff(Nval, metricProj, intN, metricField, 02)
 print 'XZ Coefficients Found!'
-C_nYX = findCartCoeff(Nval, metricProj, intN, metricField, 10)
+#C_nYX = findCartCoeff(Nval, metricProj, intN, metricField, 10)
+C_nYX = C_nXY
 print 'YX Coefficients Found!'
 C_nYY = findCartCoeff(Nval, metricProj, intN, metricField, 11)
 print 'YY Coefficients Found!'
 C_nYZ = findCartCoeff(Nval, metricProj, intN, metricField, 12)
 print 'YZ Coefficients Found!'
-C_nZX = findCartCoeff(Nval, metricProj, intN, metricField, 20)
+#C_nZX = findCartCoeff(Nval, metricProj, intN, metricField, 20)
+C_nZX = C_nXZ
 print 'ZX Coefficients Found!'
-C_nZY = findCartCoeff(Nval, metricProj, intN, metricField, 21)
+#C_nZY = findCartCoeff(Nval, metricProj, intN, metricField, 21)
+C_nZY = C_nYZ
 print 'ZY Coefficients Found!'
 C_nZZ = findCartCoeff(Nval, metricProj, intN, metricField, 22)
 print 'ZZ Coefficients Found!'
@@ -1101,15 +1117,18 @@ InvC_nXY = findCartCoeff(Nval, metricProj, intN, invMetricField, 01)
 print 'XY Coefficients Found!'
 InvC_nXZ = findCartCoeff(Nval, metricProj, intN, invMetricField, 02)
 print 'XZ Coefficients Found!'
-InvC_nYX = findCartCoeff(Nval, metricProj, intN, invMetricField, 10)
+#InvC_nYX = findCartCoeff(Nval, metricProj, intN, invMetricField, 10)
+InvC_nYX = InvC_nXY
 print 'YX Coefficients Found!'
 InvC_nYY = findCartCoeff(Nval, metricProj, intN, invMetricField, 11)
 print 'YY Coefficients Found!'
 InvC_nYZ = findCartCoeff(Nval, metricProj, intN, invMetricField, 12)
 print 'YZ Coefficients Found!'
-InvC_nZX = findCartCoeff(Nval, metricProj, intN, invMetricField, 20)
+#InvC_nZX = findCartCoeff(Nval, metricProj, intN, invMetricField, 20)
+InvC_nZX = InvC_nXZ
 print 'ZX Coefficients Found!'
-InvC_nZY = findCartCoeff(Nval, metricProj, intN, invMetricField, 21)
+#InvC_nZY = findCartCoeff(Nval, metricProj, intN, invMetricField, 21)
+InvC_nZY = InvC_nYZ
 print 'ZY Coefficients Found!'
 InvC_nZZ = findCartCoeff(Nval, metricProj, intN, invMetricField, 22)
 print 'ZZ Coefficients Found!'
@@ -1233,15 +1252,18 @@ errorListxy = calcCartErrorList(C_nXY, Nval, metricProj, intN, metricField, 01)
 print "Error for XY-Component Done!"
 errorListxz = calcCartErrorList(C_nXZ, Nval, metricProj, intN, metricField, 02)
 print "Error for XZ-Component Done!"
-errorListyx = calcCartErrorList(C_nYX, Nval, metricProj, intN, metricField, 10)
+#errorListyx = calcCartErrorList(C_nYX, Nval, metricProj, intN, metricField, 10)
+errorListyx = errorListxy
 print "Error for YX-Component Done!"
 errorListyy = calcCartErrorList(C_nYY, Nval, metricProj, intN, metricField, 11)
 print "Error for YY-Component Done!"
 errorListyz = calcCartErrorList(C_nYZ, Nval, metricProj, intN, metricField, 12)
 print "Error for YZ-Component Done!"
-errorListzx = calcCartErrorList(C_nZX, Nval, metricProj, intN, metricField, 20)
+#errorListzx = calcCartErrorList(C_nZX, Nval, metricProj, intN, metricField, 20)
+errorListzx = errorListxz
 print "Error for ZX-Component Done!"
-errorListzy = calcCartErrorList(C_nZY, Nval, metricProj, intN, metricField, 21)
+#errorListzy = calcCartErrorList(C_nZY, Nval, metricProj, intN, metricField, 21)
+errorListzy = errorListyz
 print "Error for ZY-Component Done!"
 errorListzz = calcCartErrorList(C_nZZ, Nval, metricProj, intN, metricField, 22)
 print "Error for ZZ-Component Done!"
@@ -1254,15 +1276,18 @@ invErrorListxy = calcCartErrorList(InvC_nXY, Nval, metricProj, intN, invMetricFi
 print "Error for XY-Component Done!"
 invErrorListxz = calcCartErrorList(InvC_nXZ, Nval, metricProj, intN, invMetricField, 02)
 print "Error for XZ-Component Done!"
-invErrorListyx = calcCartErrorList(InvC_nYX, Nval, metricProj, intN, invMetricField, 10)
+#invErrorListyx = calcCartErrorList(InvC_nYX, Nval, metricProj, intN, invMetricField, 10)
+invErrorListyx = invErrorListxy
 print "Error for YX-Component Done!"
 invErrorListyy = calcCartErrorList(InvC_nYY, Nval, metricProj, intN, invMetricField, 11)
 print "Error for YY-Component Done!"
 invErrorListyz = calcCartErrorList(InvC_nYZ, Nval, metricProj, intN, invMetricField, 12)
 print "Error for YZ-Component Done!"
-invErrorListzx = calcCartErrorList(InvC_nZX, Nval, metricProj, intN, invMetricField, 20)
+#invErrorListzx = calcCartErrorList(InvC_nZX, Nval, metricProj, intN, invMetricField, 20)
+invErrorListzx = invErrorListxz
 print "Error for ZX-Component Done!"
-invErrorListzy = calcCartErrorList(InvC_nZY, Nval, metricProj, intN, invMetricField, 21)
+#invErrorListzy = calcCartErrorList(InvC_nZY, Nval, metricProj, intN, invMetricField, 21)
+invErrorListzy = invErrorListyz
 print "Error for ZY-Component Done!"
 invErrorListzz = calcCartErrorList(InvC_nZZ, Nval, metricProj, intN, invMetricField, 22)
 print "Error for ZZ-Component Done!"
@@ -1289,25 +1314,25 @@ invErrorzz = invErrorListzz[len(invErrorListzz)-1]
 print "Errors Calculated!"
 
 print "Determining Series..."
-seriesResultxx = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, C_nXX)
-seriesResultxy = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, C_nXY)
-seriesResultxz = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, C_nXZ)
-seriesResultyx = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, C_nYX)
-seriesResultyy = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, C_nYY)
-seriesResultyz = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, C_nYZ)
-seriesResultzx = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, C_nZX)
-seriesResultzy = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, C_nZY)
-seriesResultzz = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, C_nZZ)
+seriesResultxx = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nXX)
+seriesResultxy = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nXY)
+seriesResultxz = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nXZ)
+seriesResultyx = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nYX)
+seriesResultyy = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nYY)
+seriesResultyz = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nYZ)
+seriesResultzx = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nZX)
+seriesResultzy = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nZY)
+seriesResultzz = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nZZ)
 #Inverse Metric
-invSeriesResultxx = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, InvC_nXX)
-invSeriesResultxy = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, InvC_nXY)
-invSeriesResultxz = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, InvC_nXZ)
-invSeriesResultyx = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, InvC_nYX)
-invSeriesResultyy = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, InvC_nYY)
-invSeriesResultyz = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, InvC_nYZ)
-invSeriesResultzx = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, InvC_nZX)
-invSeriesResultzy = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, InvC_nZY)
-invSeriesResultzz = SHSeries(np.cos(thetaVals[15]), phiVals[15], Nval, InvC_nZZ)
+invSeriesResultxx = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nXX)
+invSeriesResultxy = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nXY)
+invSeriesResultxz = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nXZ)
+invSeriesResultyx = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nYX)
+invSeriesResultyy = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nYY)
+invSeriesResultyz = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nYZ)
+invSeriesResultzx = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nZX)
+invSeriesResultzy = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nZY)
+invSeriesResultzz = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nZZ)
 
 seriesResult = np.zeros(np.shape(metricField(0,0)))
 seriesResult[0,0] = np.real(seriesResultxx)
@@ -1332,17 +1357,19 @@ invSeriesResult[2,1] = np.real(invSeriesResultzy)
 invSeriesResult[2,2] = np.real(invSeriesResultzz)
 print "Series determined, printing results..."
 
-print 'Projection Operator: ', projOperator(thetaVals[15],phiVals[15])
-print 'Metric Projection XX: ', metricProj(thetaVals[15],phiVals[15],identity,00)
-print 'Metric Projection XY: ', metricProj(thetaVals[15],phiVals[15],identity,01)
-print 'Metric Projection XZ: ', metricProj(thetaVals[15],phiVals[15],identity,02)
-print 'Metric Projection YX: ', metricProj(thetaVals[15],phiVals[15],identity,10)
-print 'Metric Projection YY: ', metricProj(thetaVals[15],phiVals[15],identity,11)
-print 'Metric Projection YZ: ', metricProj(thetaVals[15],phiVals[15],identity,12)
-print 'Metric Projection ZX: ', metricProj(thetaVals[15],phiVals[15],identity,20)
-print 'Metric Projection ZY: ', metricProj(thetaVals[15],phiVals[15],identity,21)
-print 'Metric Projection ZZ: ', metricProj(thetaVals[15],phiVals[15],identity,22)
+print 'Projection Operator: ', projOperator(np.pi/2,np.pi/4)
+print 'Metric Projection XX: ', metricProj(np.pi/2,np.pi/4,identity,00)
+print 'Metric Projection XY: ', metricProj(np.pi/2,np.pi/4,identity,01)
+print 'Metric Projection XZ: ', metricProj(np.pi/2,np.pi/4,identity,02)
+print 'Metric Projection YX: ', metricProj(np.pi/2,np.pi/4,identity,10)
+print 'Metric Projection YY: ', metricProj(np.pi/2,np.pi/4,identity,11)
+print 'Metric Projection YZ: ', metricProj(np.pi/2,np.pi/4,identity,12)
+print 'Metric Projection ZX: ', metricProj(np.pi/2,np.pi/4,identity,20)
+print 'Metric Projection ZY: ', metricProj(np.pi/2,np.pi/4,identity,21)
+print 'Metric Projection ZZ: ', metricProj(np.pi/2,np.pi/4,identity,22)
 #print 'SeriesResult*SeriesResult:', np.matmul(seriesResult,seriesResult)
+print 'Metric Result', seriesResult
+print 'Inverse Metric', invSeriesResult
 print 'SeriesResult*InverseSeriesResult:', np.matmul(invSeriesResult,seriesResult)
 
 #Print Results
