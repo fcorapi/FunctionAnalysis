@@ -83,18 +83,42 @@ def SHSeries(z, phi, N, coeff):
     return series
 
 #*********Projection and Component Functions**********************************
-def projOperator(theta, phi):
+def projOperator(theta, phi, metric):
     proj = np.zeros((3,3))
 
-    proj[0,0] = 1 - (np.sin(theta)**2)*(np.cos(phi)**2)
-    proj[0,1] = -(np.sin(theta)**2)*np.cos(phi)*np.sin(phi)
-    proj[0,2] = -np.sin(theta)*np.cos(theta)*np.cos(phi)
-    proj[1,0] = -(np.sin(theta)**2)*np.cos(phi)*np.sin(phi)
-    proj[1,1] = 1 - (np.sin(theta)**2)*(np.sin(phi)**2)
-    proj[1,2] = -np.sin(theta)*np.cos(theta)*np.sin(phi)
-    proj[2,0] = -np.sin(theta)*np.cos(theta)*np.cos(phi)
-    proj[2,1] = -np.sin(theta)*np.cos(theta)*np.sin(phi)
-    proj[2,2] = 1 - np.cos(theta)**2
+    #Inverse of the given metric
+    inverseMetric = np.linalg.inv(metric(theta,phi))
+
+    #r-vector with index down
+    r_i = np.zeros(3)
+    r_i[0] = np.sin(theta)*np.cos(phi)
+    r_i[1] = np.sin(theta)*np.sin(phi)
+    r_i[2] = np.cos(theta)
+
+    #r-vector with index up
+    ri = np.zeros(3)
+    for loop1 in range(0,np.shape(metric(theta,phi))[0]):
+        for loop2 in range(0,np.shape(metric(theta,phi))[0]):
+            ri[loop1] = r_i[loop2]*inverseMetric[loop2,loop1] + ri[loop1]
+
+    #Square of the magnitude of r_i
+    ri_squared = 0
+    for loop1 in range(0,np.shape(metric(theta,phi))[0]):
+        for loop2 in range(0,np.shape(metric(theta,phi))[1]):
+            ri_squared = r_i[loop1]*r_i[loop2]*inverseMetric[loop1,loop2] + ri_squared
+    # print "Ri_Squared:", ri_squared
+    # print "R^i:", ri
+    # print "R_i:",r_i
+
+    proj[0,0] = 1 - r_i[0]*ri[0]/ri_squared
+    proj[0,1] = -r_i[0]*ri[1]/ri_squared
+    proj[0,2] = -r_i[0]*ri[2]/ri_squared
+    proj[1,0] = -r_i[1]*ri[0]/ri_squared
+    proj[1,1] = 1 - r_i[1]*ri[1]/ri_squared
+    proj[1,2] = -r_i[1]*ri[2]/ri_squared
+    proj[2,0] = -r_i[2]*ri[0]/ri_squared
+    proj[2,1] = -r_i[2]*ri[1]/ri_squared
+    proj[2,2] = 1 - r_i[2]*ri[2]/ri_squared
 
     return proj
 
@@ -110,6 +134,10 @@ def metricField(theta, phi):
     metric[1,1] = 2.0
     metric[2,2] = 3.0
     return metric
+# thetaTest = np.pi/4
+# phiTest = np.pi/4
+# #print "ProjOperator:", projOperator(thetaTest,phiTest,metricField)
+# print "Idempotent Test:",np.matmul(projOperator(thetaTest,phiTest,metricField),projOperator(thetaTest,phiTest,metricField))-projOperator(thetaTest,phiTest,metricField)
 
 #Test Metric Field
 def identity(theta, phi):
@@ -131,7 +159,7 @@ def vecProj(theta, phi, vector, comp):
 
     for loop1 in range(0,len(vector(theta,phi))):
         for loop2 in range(0,len(vector(theta,phi))):
-            newVec[loop1] = projOperator(theta, phi)[loop1,loop2]*vector(theta,phi)[loop2] + newVec[loop1]
+            newVec[loop1] = projOperator(theta, phi, identity)[loop1,loop2]*vector(theta,phi)[loop2] + newVec[loop1]
     if comp == 0:
         return newVec[0]
     elif comp == 1:
@@ -174,23 +202,23 @@ def metricProj(theta, phi, metric, comp):
     for loop3 in range(0, np.shape(metric(theta, phi))[0]):
         for loop4 in range(0, np.shape(metric(theta, phi))[1]):
             newMetricComp = (newMetricComp +
-                             projOperator(theta, phi)[row,loop3] *
-                             projOperator(theta, phi)[col,loop4] *
+                             projOperator(theta, phi, metric)[row,loop3] *
+                             projOperator(theta, phi, metric)[col,loop4] * #potential bug
                              metric(theta, phi)[loop3,loop4])
     return newMetricComp
 
-def findCartCoeff(Nval, fn, intTerms, vec, comp):
+def findCartCoeff(Nval, fn, intTerms, obj, comp):
     coeffList = []
     # Integrate to determine Legendre series coefficients
     for n in range(0, Nval):
         for m in range(-n, n+1):
-            integralValue = GL_Quad_2D(cartIntegrand, -1.0, 1.0, 0, 2*np.pi, intTerms, 1, args=(n, m, fn, vec, comp,))
+            integralValue = GL_Quad_2D(cartIntegrand, -1.0, 1.0, 0, 2*np.pi, intTerms, 1, args=(n, m, fn, obj, comp,))
             cval = integralValue
             coeffList.append(cval)
     return coeffList
 
-def cartIntegrand(z, phi, n, m, fn, vec, comp):
-    value = np.conj(sph_harm(m, n, phi, np.arccos(z)))*fn(np.arccos(z), phi, vec, comp)
+def cartIntegrand(z, phi, n, m, fn, obj, comp):
+    value = np.conj(sph_harm(m, n, phi, np.arccos(z)))*fn(np.arccos(z), phi, obj, comp)
     return value
 
 #Function to integrate over to find error in the Legendre Series
@@ -199,21 +227,50 @@ def L2CartErrorFunction(z, phi, N, coeff, fn, vec, comp):
     return errVal
 
 #Loops over every N value up to a maximum, and calculates the L2 error.
-def calcCartErrorList(coeff, Nval, fn, intTerms, vec, cart):
+def calcCartErrorList(coeff, Nval, fn, intTerms, obj, cart):
     errList = []
     for maxN in range(1, Nval + 1):
-        err = GL_Quad_2D(L2CartErrorFunction, -1.0, 1.0, 0, 2*np.pi, intTerms, 0, args=(maxN, coeff, fn, vec, cart,))
+        err = GL_Quad_2D(L2CartErrorFunction, -1.0, 1.0, 0, 2*np.pi, intTerms, 0, args=(maxN, coeff, fn, obj, cart,))
         errList.append(np.sqrt(err))
         print "Error for N = ", maxN, " completed."
     return errList
 
+def metricTest(theta, phi, projectedMetric, metric):
+    metricCheck = np.zeros((3,3))
+
+    # Inverse of the given metric
+    inverseMetric = np.linalg.inv(metric(theta, phi))
+
+    r_test = np.zeros(3)
+    r_test[0] = np.sin(theta) * np.cos(phi)
+    r_test[1] = np.sin(theta) * np.sin(phi)
+    r_test[2] = np.cos(theta)
+
+    rTest_squared = 0
+    for loop1 in range(0, np.shape(metric(theta, phi))[0]):
+        for loop2 in range(0, np.shape(metric(theta, phi))[1]):
+            rTest_squared = r_test[loop1] * r_test[loop2] * inverseMetric[loop1, loop2] + rTest_squared
+
+    metricCheck[0, 0] = projectedMetric[0,0] - metric(theta,phi)[0, 0] + r_test[0] * r_test[0] / rTest_squared
+    metricCheck[0, 1] = projectedMetric[0,1] - metric(theta,phi)[0, 1] + r_test[0] * r_test[1] / rTest_squared
+    metricCheck[0, 2] = projectedMetric[0,2] - metric(theta,phi)[0, 2] + r_test[0] * r_test[2] / rTest_squared
+    metricCheck[1, 0] = projectedMetric[1,0] - metric(theta,phi)[1, 0] + r_test[1] * r_test[0] / rTest_squared
+    metricCheck[1, 1] = projectedMetric[1,1] - metric(theta,phi)[1, 1] + r_test[1] * r_test[1] / rTest_squared
+    metricCheck[1, 2] = projectedMetric[1,2] - metric(theta,phi)[1, 2] + r_test[1] * r_test[2] / rTest_squared
+    metricCheck[2, 0] = projectedMetric[2,0] - metric(theta,phi)[2, 0] + r_test[2] * r_test[0] / rTest_squared
+    metricCheck[2, 1] = projectedMetric[2,1] - metric(theta,phi)[2, 1] + r_test[2] * r_test[1] / rTest_squared
+    metricCheck[2, 2] = projectedMetric[2,2] - metric(theta,phi)[2, 2] + r_test[2] * r_test[2] / rTest_squared
+
+    return metricCheck
 
 #************End of Functions**********************
 
-Nval = 5 #Number of coefficients
+Nval = 25 #Number of coefficients
 intN = 2*Nval #Number of terms in Gauss-Legendre integration
 thetaVals = np.linspace(0, np.pi, 100) + 1e-5#Theta-Values
 phiVals = np.linspace(0, 2*np.pi, 100) + 1e-5 #Phi-Values
+thetaTest = np.pi/2
+phiTest = np.pi/4
 theta_mesh, phi_mesh = np.meshgrid(thetaVals, phiVals) #Make a mesh grid
 X_mesh = np.sin(theta_mesh)*np.cos(phi_mesh)
 Y_mesh = np.sin(theta_mesh)*np.sin(phi_mesh)
@@ -222,6 +279,7 @@ coeffNum = np.linspace(0,Nval-1,Nval) #List of N-values
 G = 1 #Graviational constant
 c = 1 #Speed of light
 
+#Representing Metrics using the Component-Wise Method
 t = time.time()
 print 'Finding coefficients...'
 
@@ -451,25 +509,25 @@ invErrorzz = invErrorListzz[len(invErrorListzz)-1]
 print "Errors Calculated!"
 
 print "Determining Series..."
-seriesResultxx = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nXX)
-seriesResultxy = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nXY)
-seriesResultxz = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nXZ)
-seriesResultyx = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nYX)
-seriesResultyy = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nYY)
-seriesResultyz = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nYZ)
-seriesResultzx = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nZX)
-seriesResultzy = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nZY)
-seriesResultzz = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, C_nZZ)
+seriesResultxx = SHSeries(np.cos(thetaTest), phiTest, Nval, C_nXX)
+seriesResultxy = SHSeries(np.cos(thetaTest), phiTest, Nval, C_nXY)
+seriesResultxz = SHSeries(np.cos(thetaTest), phiTest, Nval, C_nXZ)
+seriesResultyx = SHSeries(np.cos(thetaTest), phiTest, Nval, C_nYX)
+seriesResultyy = SHSeries(np.cos(thetaTest), phiTest, Nval, C_nYY)
+seriesResultyz = SHSeries(np.cos(thetaTest), phiTest, Nval, C_nYZ)
+seriesResultzx = SHSeries(np.cos(thetaTest), phiTest, Nval, C_nZX)
+seriesResultzy = SHSeries(np.cos(thetaTest), phiTest, Nval, C_nZY)
+seriesResultzz = SHSeries(np.cos(thetaTest), phiTest, Nval, C_nZZ)
 #Inverse Metric
-invSeriesResultxx = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nXX)
-invSeriesResultxy = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nXY)
-invSeriesResultxz = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nXZ)
-invSeriesResultyx = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nYX)
-invSeriesResultyy = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nYY)
-invSeriesResultyz = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nYZ)
-invSeriesResultzx = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nZX)
-invSeriesResultzy = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nZY)
-invSeriesResultzz = SHSeries(np.cos(np.pi/2), np.pi/4, Nval, InvC_nZZ)
+invSeriesResultxx = SHSeries(np.cos(thetaTest), phiTest, Nval, InvC_nXX)
+invSeriesResultxy = SHSeries(np.cos(thetaTest), phiTest, Nval, InvC_nXY)
+invSeriesResultxz = SHSeries(np.cos(thetaTest), phiTest, Nval, InvC_nXZ)
+invSeriesResultyx = SHSeries(np.cos(thetaTest), phiTest, Nval, InvC_nYX)
+invSeriesResultyy = SHSeries(np.cos(thetaTest), phiTest, Nval, InvC_nYY)
+invSeriesResultyz = SHSeries(np.cos(thetaTest), phiTest, Nval, InvC_nYZ)
+invSeriesResultzx = SHSeries(np.cos(thetaTest), phiTest, Nval, InvC_nZX)
+invSeriesResultzy = SHSeries(np.cos(thetaTest), phiTest, Nval, InvC_nZY)
+invSeriesResultzz = SHSeries(np.cos(thetaTest), phiTest, Nval, InvC_nZZ)
 
 seriesResult = np.zeros(np.shape(metricField(0,0)))
 seriesResult[0,0] = np.real(seriesResultxx)
@@ -492,43 +550,49 @@ invSeriesResult[1,2] = np.real(invSeriesResultyz)
 invSeriesResult[2,0] = np.real(invSeriesResultzx)
 invSeriesResult[2,1] = np.real(invSeriesResultzy)
 invSeriesResult[2,2] = np.real(invSeriesResultzz)
-print "Series determined, printing results..."
+print "Series determined, testing results..."
 
-print 'Projection Operator: ', projOperator(np.pi/2,np.pi/4)
-print 'Metric Projection XX: ', metricProj(np.pi/2,np.pi/4,identity,00)
-print 'Metric Projection XY: ', metricProj(np.pi/2,np.pi/4,identity,01)
-print 'Metric Projection XZ: ', metricProj(np.pi/2,np.pi/4,identity,02)
-print 'Metric Projection YX: ', metricProj(np.pi/2,np.pi/4,identity,10)
-print 'Metric Projection YY: ', metricProj(np.pi/2,np.pi/4,identity,11)
-print 'Metric Projection YZ: ', metricProj(np.pi/2,np.pi/4,identity,12)
-print 'Metric Projection ZX: ', metricProj(np.pi/2,np.pi/4,identity,20)
-print 'Metric Projection ZY: ', metricProj(np.pi/2,np.pi/4,identity,21)
-print 'Metric Projection ZZ: ', metricProj(np.pi/2,np.pi/4,identity,22)
+print "Testing Projected Metric:"
+testedMetric = metricTest(thetaTest,phiTest,seriesResult,metricField)
+print "Metric Test:", testedMetric
+print "Printing Results..."
+
+
+print 'Projection Operator: ', projOperator(np.pi/2,np.pi/4,metricField)
+print 'Metric Projection XX: ', metricProj(np.pi/2,np.pi/4,metricField,00)
+print 'Metric Projection XY: ', metricProj(np.pi/2,np.pi/4,metricField,01)
+print 'Metric Projection XZ: ', metricProj(np.pi/2,np.pi/4,metricField,02)
+print 'Metric Projection YX: ', metricProj(np.pi/2,np.pi/4,metricField,10)
+print 'Metric Projection YY: ', metricProj(np.pi/2,np.pi/4,metricField,11)
+print 'Metric Projection YZ: ', metricProj(np.pi/2,np.pi/4,metricField,12)
+print 'Metric Projection ZX: ', metricProj(np.pi/2,np.pi/4,metricField,20)
+print 'Metric Projection ZY: ', metricProj(np.pi/2,np.pi/4,metricField,21)
+print 'Metric Projection ZZ: ', metricProj(np.pi/2,np.pi/4,metricField,22)
 #print 'SeriesResult*SeriesResult:', np.matmul(seriesResult,seriesResult)
 print 'Metric Result', seriesResult
 print 'Inverse Metric', invSeriesResult
 print 'SeriesResult*InverseSeriesResult:', np.matmul(invSeriesResult,seriesResult)
 
-#Print Results
-print "Spherical Harmonics Series XX Coefficients:", np.real(C_nXX)
-print "Spherical Harmonics Series XY Coefficients:", np.real(C_nXY)
-print "Spherical Harmonics Series XZ Coefficients:", np.real(C_nXZ)
-print "Spherical Harmonics Series YX Coefficients:", np.real(C_nYX)
-print "Spherical Harmonics Series YY Coefficients:", np.real(C_nYY)
-print "Spherical Harmonics Series YZ Coefficients:", np.real(C_nYZ)
-print "Spherical Harmonics Series ZX Coefficients:", np.real(C_nZX)
-print "Spherical Harmonics Series ZY Coefficients:", np.real(C_nZY)
-print "Spherical Harmonics Series ZZ Coefficients:", np.real(C_nZZ)
-#Inverse Series
-print "Inverse Spherical Harmonics Series XX Coefficients:", np.real(InvC_nXX)
-print "Inverse Spherical Harmonics Series XY Coefficients:", np.real(InvC_nXY)
-print "Inverse Spherical Harmonics Series XZ Coefficients:", np.real(InvC_nXZ)
-print "Inverse Spherical Harmonics Series YX Coefficients:", np.real(InvC_nYX)
-print "Inverse Spherical Harmonics Series YY Coefficients:", np.real(InvC_nYY)
-print "Inverse Spherical Harmonics Series YZ Coefficients:", np.real(InvC_nYZ)
-print "Inverse Spherical Harmonics Series ZX Coefficients:", np.real(InvC_nZX)
-print "Inverse Spherical Harmonics Series ZY Coefficients:", np.real(InvC_nZY)
-print "Inverse Spherical Harmonics Series ZZ Coefficients:", np.real(InvC_nZZ)
+# #Print Results
+# print "Spherical Harmonics Series XX Coefficients:", np.real(C_nXX)
+# print "Spherical Harmonics Series XY Coefficients:", np.real(C_nXY)
+# print "Spherical Harmonics Series XZ Coefficients:", np.real(C_nXZ)
+# print "Spherical Harmonics Series YX Coefficients:", np.real(C_nYX)
+# print "Spherical Harmonics Series YY Coefficients:", np.real(C_nYY)
+# print "Spherical Harmonics Series YZ Coefficients:", np.real(C_nYZ)
+# print "Spherical Harmonics Series ZX Coefficients:", np.real(C_nZX)
+# print "Spherical Harmonics Series ZY Coefficients:", np.real(C_nZY)
+# print "Spherical Harmonics Series ZZ Coefficients:", np.real(C_nZZ)
+# #Inverse Series
+# print "Inverse Spherical Harmonics Series XX Coefficients:", np.real(InvC_nXX)
+# print "Inverse Spherical Harmonics Series XY Coefficients:", np.real(InvC_nXY)
+# print "Inverse Spherical Harmonics Series XZ Coefficients:", np.real(InvC_nXZ)
+# print "Inverse Spherical Harmonics Series YX Coefficients:", np.real(InvC_nYX)
+# print "Inverse Spherical Harmonics Series YY Coefficients:", np.real(InvC_nYY)
+# print "Inverse Spherical Harmonics Series YZ Coefficients:", np.real(InvC_nYZ)
+# print "Inverse Spherical Harmonics Series ZX Coefficients:", np.real(InvC_nZX)
+# print "Inverse Spherical Harmonics Series ZY Coefficients:", np.real(InvC_nZY)
+# print "Inverse Spherical Harmonics Series ZZ Coefficients:", np.real(InvC_nZZ)
 #Check Coefficients
 print "Checking Values of XX Coefficients:", checkCoeffxx
 print "Checking Values of XY Coefficients:", checkCoeffxy
